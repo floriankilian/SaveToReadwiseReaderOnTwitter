@@ -36,3 +36,12 @@ The "Save Tweets to Readwise" UserScript adds a convenient button to copy the UR
 
 
 By following these simple installation steps, you can enhance your Twitter browsing experience by easily saving and sending tweets to Readwise.
+
+
+## Possible future improvements:
+- Optimize API Key Handling
+    - checking for the API key only when the user decides to save a tweet to reduce potential annoyance
+    - update the stored API key without clearing browser data or changing Tampermonkey settings (e.g., Alt + Click on the save icon).
+- Improve Error Handling, e.g. red icon on an error
+- Refactor and Modularize Code
+- Add save (first) link from a tweet instead of tweet, (e.g., Shift + Click on the save icon)
