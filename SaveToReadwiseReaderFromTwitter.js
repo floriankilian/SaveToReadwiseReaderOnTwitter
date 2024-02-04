@@ -1,15 +1,15 @@
 // ==UserScript==
 // @name         One Click Copy Link Button for Twitter(X)
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      0.1
 // @description  Add a button to copy the URL of a tweet on Twitter without clicking dropdown. Default to vxtwitter but customizable.
-// @author       Dinomcworld
+// @author       sirfloriank
 // @match        https://twitter.com/*
 // @match        https://mobile.twitter.com/*
 // @match        https://tweetdeck.twitter.com/*
 // @match        https://x.com/*
 // @icon         https://www.google.com/s2/favicons?domain=twitter.com
-// @grant        none
+// @grant        GM_xmlhttpRequest
 // @license      MIT
 
 // ==/UserScript==
@@ -39,6 +39,8 @@
                             .then(() => {
                                 console.log('Tweet link copied!');
                                 copyIcon.innerHTML = copiedSVG;
+                                // Here you call the function to save the URL to Readwise
+                                saveTweetUrlToReadwise(tweetUrl);
                             })
                             .catch(err => console.error('Error copying link: ', err));
                     }
@@ -63,6 +65,39 @@
         }
         return `${baseUrl}${url}`;
     }
+
+    function saveTweetUrlToReadwise(tweetUrl) {
+        const apiToken = 'YOUR_API_TOKEN'; // Replace this with your actual Readwise token
+        const readerApiUrl = 'https://readwise.io/api/v3/save/'; // Adjust API URL if needed
+
+        const data = {
+            url: tweetUrl,
+            category: 'tweet' // Adjust based on Readwise's expected categories, if needed
+        };
+
+        GM_xmlhttpRequest({
+            method: "POST",
+            url: readerApiUrl,
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Token " + apiToken
+            },
+            data: JSON.stringify(data),
+            onload: function (response) {
+                console.log('Response received from Readwise:');
+                console.log(response.responseText); // Logs the text response from Readwise
+                if (response.status === 200 || response.status === 201) {
+                    console.log('Successfully saved to Readwise:', tweetUrl);
+                } else {
+                    console.log('Readwise save was not successful. Status:', response.status);
+                }
+            },
+            onerror: function (error) {
+                console.error('Error during the API request:', error);
+            }
+        });
+    }
+
 
     function adjustIconStyle(tweet, copyIcon) {
         // Find all spans within the tweet
