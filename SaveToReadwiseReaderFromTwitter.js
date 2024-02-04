@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         One Click Copy Link Button for Twitter(X)
+// @name         Save Tweets to ReaderwiseReader within a tweet on Twitter/X
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Add a button to copy the URL of a tweet on Twitter without clicking dropdown. Default to vxtwitter but customizable.
+// @description  Add a button to copy the URL of a tweet on Twitter without clicking dropdown, and also save it to ReaderwiseReader
 // @author       sirfloriank
 // @match        https://twitter.com/*
 // @match        https://mobile.twitter.com/*
