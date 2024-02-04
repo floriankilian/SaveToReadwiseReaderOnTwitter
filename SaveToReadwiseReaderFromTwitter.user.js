@@ -26,7 +26,6 @@
     const savedtoReaderSVG = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-reader-check" viewBox="0 0 24 24" stroke-width="2" stroke="#FDE704" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" /><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M9 14l2 2l4 -4" /></svg>';
 
     const apiKey = promptForApiKey();
-    
     // Function to prompt for API key if not set
     function promptForApiKey() {
         let apiKey = GM_getValue("apiKey");
@@ -83,7 +82,7 @@
     }
 
     function saveTweetUrlToReadwise(tweetUrl, copyIcon) {
-        const apiToken =  apiKey; // Use this if you want to set your API token manually (not very safe) 'YOUR_API_TOKEN'; // Replace this with your actual Readwise token
+        const apiToken = apiKey; // Use this if you want to set your API token manually (not very safe) 'YOUR_API_TOKEN'; // Replace this with your actual Readwise token
         const readerApiUrl = 'https://readwise.io/api/v3/save/'; // Adjust API URL if needed
 
         const data = {
