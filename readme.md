@@ -53,3 +53,4 @@ By following these simple installation steps, you can enhance your Twitter brows
     - update the stored API key without clearing browser data or changing Tampermonkey settings (e.g., Alt + Click on the save icon).
 - Improve Error Handling, e.g. red icon on an error
 - Refactor and Modularize Code
+- Get the author of the tweet instead of "twitter.com"
