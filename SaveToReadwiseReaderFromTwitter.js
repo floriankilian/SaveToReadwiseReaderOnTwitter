@@ -21,6 +21,7 @@
 
     const defaultSVG = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clipboard" viewBox="0 0 24 24" stroke-width="2" stroke="#71767C" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" /><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /></svg>';
     const copiedSVG = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clipboard-check" viewBox="0 0 24 24" stroke-width="2" stroke="#00abfb" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" /><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M9 14l2 2l4 -4" /></svg>';
+    const savedtoReaderSVG = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-reader-check" viewBox="0 0 24 24" stroke-width="2" stroke="#FDE704" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" /><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M9 14l2 2l4 -4" /></svg>';
 
     function addCopyButtonToTweets() {
         const tweets = document.querySelectorAll('article[data-testid="tweet"]');
@@ -38,9 +39,10 @@
                         navigator.clipboard.writeText(tweetUrl)
                             .then(() => {
                                 console.log('Tweet link copied!');
+                                // Initially indicate the link is copied
                                 copyIcon.innerHTML = copiedSVG;
-                                // Here you call the function to save the URL to Readwise
-                                saveTweetUrlToReadwise(tweetUrl);
+                                // Attempt to save the URL to Readwise and change the icon on success
+                                saveTweetUrlToReadwise(tweetUrl, copyIcon);
                             })
                             .catch(err => console.error('Error copying link: ', err));
                     }
@@ -66,7 +68,7 @@
         return `${baseUrl}${url}`;
     }
 
-    function saveTweetUrlToReadwise(tweetUrl) {
+    function saveTweetUrlToReadwise(tweetUrl, copyIcon) {
         const apiToken = 'YOUR_API_TOKEN'; // Replace this with your actual Readwise token
         const readerApiUrl = 'https://readwise.io/api/v3/save/'; // Adjust API URL if needed
 
@@ -84,12 +86,12 @@
             },
             data: JSON.stringify(data),
             onload: function (response) {
-                console.log('Response received from Readwise:');
-                console.log(response.responseText); // Logs the text response from Readwise
                 if (response.status === 200 || response.status === 201) {
-                    console.log('Successfully saved to Readwise:', tweetUrl);
+                    console.log('Tweet URL saved to Readwise:', tweetUrl);
+                    // Replace the icon with the savedtoReaderSVG to indicate success
+                    copyIcon.innerHTML = savedtoReaderSVG;
                 } else {
-                    console.log('Readwise save was not successful. Status:', response.status);
+                    console.error('Failed to save tweet URL to Readwise:', response.statusText);
                 }
             },
             onerror: function (error) {
