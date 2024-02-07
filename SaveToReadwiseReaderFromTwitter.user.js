@@ -18,16 +18,16 @@
 (function () {
     'use strict';
 
-// Constants
+    // Define constants for base URL and SVG images for icons
     const baseUrl = 'https://twitter.com';
     const defaultSVG = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clipboard" viewBox="0 0 24 24" stroke-width="2" stroke="#71767C" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" /><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /></svg>';
     const copiedSVG = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clipboard-check" viewBox="0 0 24 24" stroke-width="2" stroke="#00abfb" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" /><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M9 14l2 2l4 -4" /></svg>';
     const savedtoReaderSVG = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-reader-check" viewBox="0 0 24 24" stroke-width="2" stroke="#FDE704" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" /><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M9 14l2 2l4 -4" /></svg>';
 
-// Prompt for API key if not set
+    // Initialize the API key by checking the storage or prompting the user
     const apiKey = promptForApiKey();
 
-    // Function to prompt for API key if not set
+    // Function that checks for an API key in the storage, or prompts the user if it doesn't exist
     function promptForApiKey() {
         let apiKey = GM_getValue("apiKey");
         if (!apiKey) {
@@ -37,7 +37,7 @@
         return apiKey;
     }
 
-// Add copy button to tweets
+    // Add copy button to tweets
     function addCopyButtonToTweets() {
         const tweets = document.querySelectorAll('article[data-testid="tweet"]');
         tweets.forEach(tweet => {
@@ -66,7 +66,7 @@
         });
     }
 
-// Extract tweet URL from tweet element
+    // Extract tweet URL from tweet element
     function extractTweetUrl(tweetElement) {
         const linkElement = tweetElement.querySelector('a[href*="/status/"]');
         if (!linkElement) {
@@ -79,7 +79,7 @@
         return `${baseUrl}${url}`;
     }
 
-// Save tweet URL to Readwise
+    // Save tweet URL to Readwise
     function saveTweetUrlToReadwise(tweetUrl, copyIcon) {
         const apiToken = apiKey;
         const readerApiUrl = 'https://readwise.io/api/v3/save/';
@@ -110,7 +110,7 @@
         });
     }
 
-// Adjust icon style based on tweet type
+    // Adjust icon style based on tweet type
     function adjustIconStyle(tweet, copyIcon) {
                 const spans = tweet.querySelectorAll('span');
         let isIndividualTweet = false;
@@ -126,10 +126,10 @@
         }
     }
 
-// Observe mutations and add copy button to new tweets
+    // Observe mutations and add copy button to new tweets
     const observer = new MutationObserver(addCopyButtonToTweets);
     observer.observe(document.body, { childList: true, subtree: true });
 
-// Add copy button to existing tweets
+    // Add copy button to existing tweets
     addCopyButtonToTweets();
 })();
