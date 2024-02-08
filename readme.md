@@ -54,3 +54,7 @@ By following these simple installation steps, you can enhance your Twitter brows
 - ~~Improve Error Handling, e.g. red icon on an error~~
 - Refactor and Modularize Code better
 - Get the author of the tweet instead of "twitter.com"
+
+
+## Find more useful tools for Readwise Reader
+https://github.com/Scarvy/awesome-readwise
