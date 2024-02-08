@@ -70,7 +70,7 @@
                             // Initially indicate the link is copied
                             copyIcon.innerHTML = copiedSVG;
                             // Attempt to save the URL to Readwise and change the icon on success
-                            saveTweetUrlToReadwise(tweetUrl, copyIcon);
+                            saveTweetUrlToReadwise(tweet, tweetUrl, copyIcon);
                         })
                         .catch(err => console.error('Error copying link: ', err));
                     }
@@ -82,6 +82,7 @@
 
     // Extract tweet URL from tweet element
     function extractTweetUrl(tweetElement) {
+        console.log(tweetElement);
         const linkElement = tweetElement.querySelector('a[href*="/status/"]');
         if (!linkElement) {
             return;
@@ -90,11 +91,58 @@
         if (url.includes('/photo/')) {
             url = url.split('/photo/')[0];
         }
+        console.log('extractTweetUrl!', url);
         return `${baseUrl}${url}`;
     }
 
+    function extractAuthorName(tweetElement) {
+        // Convert the tweet element to an HTML string
+        const tweetHtml = tweetElement.outerHTML;
+        
+        // The end marker that is 100% after the author's name
+        const endMarker = '</span></span></div><div dir="ltr"';
+        // Find the position of the end marker in the HTML string
+        const endMarkerIndex = tweetHtml.indexOf(endMarker);
+        if (endMarkerIndex === -1) {
+            console.log("Couldn't find the end marker.");
+            return;
+        }
+        
+        // The unique pattern that precedes the author's name but appears multiple times
+        const startMarker = 'style="text-overflow: unset;">';
+        // Find all occurrences of the start marker up to the end marker
+        let lastStartMarkerIndex = -1;
+        let tempIndex = tweetHtml.indexOf(startMarker, lastStartMarkerIndex + 1);
+        while (tempIndex !== -1 && tempIndex < endMarkerIndex) {
+            lastStartMarkerIndex = tempIndex;
+            tempIndex = tweetHtml.indexOf(startMarker, lastStartMarkerIndex + 1);
+        }
+    
+        if (lastStartMarkerIndex === -1) {
+            console.log("Couldn't find the start marker before the end marker.");
+            return;
+        }
+        
+        // Calculate the starting point of the author's name
+        const nameStart = lastStartMarkerIndex + startMarker.length;
+        
+        // The author's name is assumed to end where the HTML tag starts before the end marker
+        const nameEnd = tweetHtml.indexOf('<', nameStart);
+        if (nameEnd === -1 || nameEnd > endMarkerIndex) {
+            console.log("Couldn't properly extract the author's name.");
+            return;
+        }
+        
+        // Extract the author's name based on the calculated indices
+        const authorName = tweetHtml.substring(nameStart, nameEnd).trim();
+        
+        console.log('the author name is:', authorName);
+        return authorName;
+    }
+    
+
     // Save tweet URL to Readwise
-    function saveTweetUrlToReadwise(tweetUrl, copyIcon) {
+    function saveTweetUrlToReadwise(tweet, tweetUrl,copyIcon) {
         const apiToken = apiKey;
         if (!apiKey) {
             // Indicate missing API key by changing the icon color to red
@@ -103,11 +151,16 @@
             console.error('API key for Readwise is not set.');
         } else 
         {
+            const tweetAuthor = extractAuthorName(tweet)
             const readerApiUrl = 'https://readwise.io/api/v3/save/';
             const data = {
                 url: tweetUrl,
                 category: 'tweet'
-            };
+            }
+            if (tweetAuthor) {
+                data.author = tweetAuthor;
+            }
+            ;
             GM_xmlhttpRequest({
                 method: "POST",
                 url: readerApiUrl,
