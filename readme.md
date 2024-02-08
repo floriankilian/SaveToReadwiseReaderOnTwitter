@@ -52,8 +52,11 @@ By following these simple installation steps, you can enhance your Twitter brows
     - ~~checking for the API key only when the user decides to save a tweet to reduce potential annoyance~~
     - ~~update the stored API key without clearing browser data or changing Tampermonkey settings (e.g., Alt + Click on the save icon)~~
 - ~~Improve Error Handling, e.g. red icon on an error~~
-- Refactor and Modularize Code better
-- Get the author of the tweet instead of "twitter.com"
+- Refactor and Modularize Code
+- ~~Get the author of the tweet instead of "twitter.com"~~
+
+## Known issues:
+- If the selected tweet is a reply to another "thread"-tweet, the reply will be parsed by Reader instead of the "reply"-Tweet.
 
 
 ## Find more useful tools for Readwise Reader
