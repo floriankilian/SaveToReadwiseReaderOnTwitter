@@ -22,21 +22,30 @@
     const baseUrl = 'https://twitter.com';
     const defaultSVG = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clipboard" viewBox="0 0 24 24" stroke-width="2" stroke="#71767C" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" /><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /></svg>';
     const copiedSVG = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clipboard-check" viewBox="0 0 24 24" stroke-width="2" stroke="#00abfb" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" /><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M9 14l2 2l4 -4" /></svg>';
-    const savedtoReaderSVG = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clipboard-plus" viewBox="0 0 24 24" stroke-width="2" stroke="#FDE704" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" /><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M9 14l2 2l4 -4" /></svg>';
 
-    // Initialize the API key by checking the storage or prompting the user
-    const apiKey = promptForApiKey();
+    // Initialize apiKey variable without assigning a value
+    let apiKey = GM_getValue("apiKey", null); // Retrieves the API key from storage or null if not set
 
     // Function that checks for an API key in the storage, or prompts the user if it doesn't exist
     function promptForApiKey() {
         let apiKey = GM_getValue("apiKey");
-        if (!apiKey) {
+        // Check if an API key is already stored
+        if (apiKey) {
+            // Inform the user that an API key is already set and ask if they want to update it
+            let newApiKey = window.prompt("An API key for Readwise is already set. Enter a new API key to update it, or press OK to keep the current one.", apiKey);
+            // If the user enters a new API key, update it; otherwise, keep the existing one
+            if (newApiKey && newApiKey !== apiKey) {
+                GM_setValue("apiKey", newApiKey);
+                apiKey = newApiKey;
+            }
+        } else {
+            // If no API key is set, prompt the user to enter it
             apiKey = window.prompt("Please enter your API key for Readwise:");
             GM_setValue("apiKey", apiKey);
         }
         return apiKey;
     }
-
+    
     // Add copy button to tweets
     function addCopyButtonToTweets() {
         const tweets = document.querySelectorAll('article[data-testid="tweet"]');
@@ -49,16 +58,21 @@
                 copyIcon.addEventListener('click', (event) => {
                     event.stopPropagation();
                     const tweetUrl = extractTweetUrl(tweet);
-                    if (tweetUrl) {
+                    // Check if the Alt key was pressed during the click
+                    if (event.altKey) {
+                        // Prompt for the API key if Alt key is pressed
+                        apiKey = promptForApiKey();
+                    } else {
+                        // Copy the tweet URL to clipboard
                         navigator.clipboard.writeText(tweetUrl)
-                            .then(() => {
-                                console.log('Tweet link copied!');
-                                // Initially indicate the link is copied
-                                copyIcon.innerHTML = copiedSVG;
-                                // Attempt to save the URL to Readwise and change the icon on success
-                                saveTweetUrlToReadwise(tweetUrl, copyIcon);
-                            })
-                            .catch(err => console.error('Error copying link: ', err));
+                        .then(() => {
+                            console.log('Tweet link copied!');
+                            // Initially indicate the link is copied
+                            copyIcon.innerHTML = copiedSVG;
+                            // Attempt to save the URL to Readwise and change the icon on success
+                            saveTweetUrlToReadwise(tweetUrl, copyIcon);
+                        })
+                        .catch(err => console.error('Error copying link: ', err));
                     }
                 });
                 tweet.appendChild(copyIcon);
@@ -82,32 +96,44 @@
     // Save tweet URL to Readwise
     function saveTweetUrlToReadwise(tweetUrl, copyIcon) {
         const apiToken = apiKey;
-        const readerApiUrl = 'https://readwise.io/api/v3/save/';
-        const data = {
-            url: tweetUrl,
-            category: 'tweet'
-        };
-        GM_xmlhttpRequest({
-            method: "POST",
-            url: readerApiUrl,
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Token " + apiToken
-            },
-            data: JSON.stringify(data),
-            onload: function (response) {
-                if (response.status === 200 || response.status === 201) {
-                    console.log('Tweet URL saved to Readwise:', tweetUrl);
-                    // Replace the icon with the savedtoReaderSVG to indicate success
-                    copyIcon.innerHTML = savedtoReaderSVG;
-                } else {
-                    console.error('Failed to save tweet URL to Readwise:', response.statusText);
+        if (!apiKey) {
+            // Indicate missing API key by changing the icon color to red
+            copyIcon.querySelector('svg').setAttribute('stroke', 'red');
+            copyIcon.querySelector('svg').setAttribute('fill', 'red');
+            console.error('API key for Readwise is not set.');
+        } else 
+        {
+            const readerApiUrl = 'https://readwise.io/api/v3/save/';
+            const data = {
+                url: tweetUrl,
+                category: 'tweet'
+            };
+            GM_xmlhttpRequest({
+                method: "POST",
+                url: readerApiUrl,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Token " + apiToken
+                },
+                data: JSON.stringify(data),
+                onload: function (response) {
+                    if (response.status === 200 || response.status === 201) {
+                        console.log('Tweet URL saved to Readwise:', tweetUrl);
+                        // Replace the icon color with yellow from ReadwiseReader to indicate success
+                        copyIcon.querySelector('svg').setAttribute('stroke', '#FDE704');
+                    } else {
+                        // Handle non-successful responses by changing the icon color to red
+                        copyIcon.querySelector('svg').setAttribute('stroke', 'red');
+                        console.error('Failed to save tweet URL to Readwise:', response.statusText);
+                    }
+                },
+                onerror: function (error) {
+                    // Handle request errors by changing the icon color to red
+                    copyIcon.querySelector('svg').setAttribute('stroke', 'red');
+                    console.error('Error during the API request:', error);
                 }
-            },
-            onerror: function (error) {
-                console.error('Error during the API request:', error);
-            }
-        });
+            });
+        }
     }
 
     // Adjust icon style based on tweet type
