@@ -14,12 +14,12 @@ The "Save Tweets to Readwise" UserScript adds a convenient button to copy the UR
 
 ### Configuration
 1. Access any Twitter URL (x/twitter)
-2. On first visit of Twitter, you'll be prompted to provide your Readwise API key.
+2. Click on the new copy icon with an alt-left-click (option on mac) to set your API key
 
 <img src="readme/APIKey-Request.png" alt="Provide your API Key" width="40%">
 
 3. Paste the API key from your clipboard.
-4. Voila! You now have a small clipboard icon next to the bookmark icon.
+4. Voila!
 
 <img src="readme/tweet.png" alt="How it will be displayed" width="50%">
 
@@ -48,9 +48,9 @@ By following these simple installation steps, you can enhance your Twitter brows
 
 
 ## Possible future improvements:
-- Optimize API Key Handling
-    - checking for the API key only when the user decides to save a tweet to reduce potential annoyance
-    - update the stored API key without clearing browser data or changing Tampermonkey settings (e.g., Alt + Click on the save icon).
-- Improve Error Handling, e.g. red icon on an error
-- Refactor and Modularize Code
+- ~~Optimize API Key Handling~~
+    - ~~checking for the API key only when the user decides to save a tweet to reduce potential annoyance~~
+    - ~~update the stored API key without clearing browser data or changing Tampermonkey settings (e.g., Alt + Click on the save icon)~~
+- ~~Improve Error Handling, e.g. red icon on an error~~
+- Refactor and Modularize Code better
 - Get the author of the tweet instead of "twitter.com"
