@@ -57,6 +57,12 @@ By following these simple installation steps, you can enhance your Twitter brows
 
 ## Known issues:
 - If the selected tweet is a reply to another "thread"-tweet, the reply will be parsed by Reader instead of the "reply"-Tweet.
+- Tweets can be saved multiple times as there is currently no check check if the tweet was already saved.
+
+## Credits
+- [Readwise](https://readwise.io/)
+- [Tampermonkey](https://tampermonkey.net/)
+- [One Click Copy Link Button for Twitter](hhttps://greasyfork.org/ckb/scripts/482477-one-click-copy-link-button-for-twitter-x/feedback)
 
 
 ## Find more useful tools for Readwise Reader
