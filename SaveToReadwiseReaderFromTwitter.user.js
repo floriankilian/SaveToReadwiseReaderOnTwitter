@@ -145,6 +145,8 @@
     function saveTweetUrlToReadwise(tweet, tweetUrl,copyIcon) {
         const apiToken = apiKey;
         if (!apiKey) {
+            // Display an error message to the user
+            displayErrorMessage("API key for Readwise is not set. Alt+Left click on the save icon to set the API key.");
             // Indicate missing API key by changing the icon color to red
             copyIcon.querySelector('svg').setAttribute('stroke', 'red');
             copyIcon.querySelector('svg').setAttribute('fill', 'red');
@@ -203,6 +205,41 @@
         } else {
             copyIcon.style.cssText = 'width: 19px; height: 19px; cursor: pointer; padding: 2px 5px; margin: 2px; position: absolute; bottom: 9px; right: 72px';
         }
+    }
+
+    function displayErrorMessage(message) {
+        // Check if an error message container already exists
+        let errorContainer = document.querySelector('.custom-error-message');
+        
+        // If it doesn't exist, create one and append it to the body
+        if (!errorContainer) {
+            errorContainer = document.createElement('div');
+            errorContainer.className = 'custom-error-message';
+            document.body.appendChild(errorContainer);
+        }
+        
+        // Set the error message text
+        errorContainer.textContent = message;
+        
+        // Apply styles to make it visible and properly formatted
+        errorContainer.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #800000;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 9999;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            font-family: Helvetica, sans-serif;
+        `;
+        
+        // Automatically hide the error after a delay
+        setTimeout(() => {
+            errorContainer.style.display = 'none';
+        }, 5000);
     }
 
     // Observe mutations and add copy button to new tweets
