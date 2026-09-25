@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Save Tweets to ReaderwiseReader within a tweet on Twitter/X
-// @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  Add a button to copy the URL of a tweet on Twitter without clicking dropdown, and also save it to ReaderwiseReader
+// @name         Save Tweets to Readwise Reader
+// @namespace    https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter
+// @version      1.0.0
+// @description  Adds a one-click button to every tweet on Twitter/X that copies the tweet link and saves the tweet to Readwise Reader.
 // @author       sirfloriank
 // @match        https://twitter.com/*
 // @match        https://mobile.twitter.com/*
@@ -12,7 +12,12 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_xmlhttpRequest
+// @connect      readwise.io
 // @license      MIT
+// @supportURL   https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/issues
+// @homepageURL  https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter
+// @updateURL    https://raw.githubusercontent.com/floriankilian/SaveToReadwiseReaderOnTwitter/main/SaveToReadwiseReaderFromTwitter.user.js
+// @downloadURL  https://raw.githubusercontent.com/floriankilian/SaveToReadwiseReaderOnTwitter/main/SaveToReadwiseReaderFromTwitter.user.js
 // ==/UserScript==
 
 (function () {
