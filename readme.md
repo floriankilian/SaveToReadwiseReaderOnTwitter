@@ -1,18 +1,22 @@
 # Save Tweets to Readwise Reader with Tampermonkey
 
-[![Tampermonkey](https://img.shields.io/badge/Tampermonkey-userscript-004B5F?logo=tampermonkey&logoColor=white)](https://www.tampermonkey.net/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/blob/main/LICENSE)
+[![Tampermonkey](https://img.shields.io/badge/Tampermonkey-userscript-004B5F?logo=tampermonkey&logoColor=white)](https://www.tampermonkey.net/) [![Greasy Fork](https://img.shields.io/badge/Greasy%20Fork-install-670000)](https://greasyfork.org/de/scripts/597358-save-tweets-to-readwise-reader) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/blob/main/LICENSE)
 
 The "Save Tweets to Readwise Reader" userscript adds a button to every tweet on Twitter/X. One click copies the tweet's URL to your clipboard, without going through any dropdowns, and saves the tweet to [Readwise Reader](https://readwise.io/read).
 
 ## How to Install
 ### Setup of Tampermonkey and the Userscript
-1. Install the [Tampermonkey](https://www.tampermonkey.net/) browser extension.
-2. Open the script in [Raw View](https://raw.githubusercontent.com/floriankilian/SaveToReadwiseReaderOnTwitter/main/SaveToReadwiseReaderFromTwitter.user.js).
-3. Tampermonkey will prompt you to install the userscript. Click Install.
+Install the [Tampermonkey](https://www.tampermonkey.net/) browser extension first, then pick one of the options below.
+
+**Option A: Greasy Fork (recommended)** Install directly from [Greasy Fork](https://greasyfork.org/de/scripts/597358-save-tweets-to-readwise-reader). One click, and you'll get automatic update notifications through Greasy Fork's own update channel.
+
+**Option B: directly from GitHub**
+1. Open the script in [Raw View](https://raw.githubusercontent.com/floriankilian/SaveToReadwiseReaderOnTwitter/main/SaveToReadwiseReaderFromTwitter.user.js).
+2. Tampermonkey will prompt you to install the userscript. Click Install.
 
 <img src="readme/tampermonkey-install-userscript.png" alt="Install Userscript on Tampermonkey" width="50%">
 
-The script updates itself from this repo whenever a new version is pushed (via the `@updateURL`/`@downloadURL` metadata).
+With option B, the script updates itself from this repo whenever a new version is pushed (via the `@updateURL`/`@downloadURL` metadata).
 
 ### Get a Readwise API key
 1. Get your Readwise [API key](https://readwise.io/access_token) and copy it to your clipboard.
