@@ -246,6 +246,10 @@
     }
 
     function attachCopyEvent(icon, tweet) {
+        // Shift+Click would otherwise select the text between the last click and this button
+        icon.addEventListener('mousedown', event => {
+            if (event.shiftKey) event.preventDefault();
+        });
         icon.addEventListener('click', event => {
             event.preventDefault();
             event.stopPropagation();
@@ -260,6 +264,9 @@
             return;
         }
 
+        // A double click or an impatient second click would save the tweet twice
+        if (icon.dataset.state === 'saving') return;
+
         const tweetUrl = extractTweetUrl(tweet);
         if (!tweetUrl) {
             showToast('Could not find the link of this tweet.', { type: 'error' });
@@ -268,7 +275,7 @@
 
         if (settings.copyLink) copyToClipboard(tweetUrl);
         const save = event.shiftKey
-            ? () => openNoteDialog(extras => saveTweetUrlToReadwise(tweetUrl, icon, extras))
+            ? () => openNoteDialog(tweetUrl, extras => saveTweetUrlToReadwise(tweetUrl, icon, extras))
             : () => saveTweetUrlToReadwise(tweetUrl, icon);
         if (!apiKey) {
             openApiKeyDialog({ onSaved: save });
@@ -732,9 +739,12 @@
     // --- Note dialog (Shift+Click) ---
 
     // Asks for a note and tags for one tweet, then calls onSubmit({ notes, tags })
-    function openNoteDialog(onSubmit) {
+    function openNoteDialog(tweetUrl, onSubmit) {
         const { dialog, close } = openDialog('Save with a note');
-        dialog.appendChild(createElement('p', 'rw-text', 'The note is saved with the tweet in Reader.'));
+        const author = tweetUrl.match(/\/([^/]+)\/status\//)?.[1];
+        dialog.appendChild(createElement('p', 'rw-text', author
+            ? `Saving @${author}'s tweet. The note is saved with it in Reader.`
+            : 'The note is saved with the tweet in Reader.'));
 
         const notes = createElement('textarea', 'rw-input rw-textarea');
         notes.placeholder = 'Why are you saving this?';
