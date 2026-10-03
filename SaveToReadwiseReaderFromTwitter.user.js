@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Save Tweets to Readwise Reader
 // @namespace    https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter
-// @version      1.2.1
+// @version      1.3.0
 // @description  Adds a one-click button to every tweet on Twitter/X that copies the tweet link and saves the tweet to Readwise Reader.
 // @author       sirfloriank
 // @match        https://twitter.com/*
@@ -30,6 +30,27 @@
     const SAVE_API_URL = 'https://readwise.io/api/v3/save/';
     const AUTH_API_URL = 'https://readwise.io/api/v2/auth/';
     const REQUEST_TIMEOUT = 15000;
+    const SAVED_TWEETS_KEY = 'savedTweets';
+    const MAX_REMEMBERED_TWEETS = 5000;
+    // Mac keyboards label the keys differently: Option instead of Alt, Cmd instead of Ctrl
+    const IS_MAC = /mac|iphone|ipad/i.test(navigator.userAgentData?.platform || navigator.platform || '');
+    const KEYS = IS_MAC
+        ? { alt: '⌥ Option', shift: '⇧ Shift', mod: '⌘ Cmd' }
+        : { alt: 'Alt', shift: 'Shift', mod: 'Ctrl' };
+    const SHORTCUTS_HINT = `Click: save · ${KEYS.shift}+Click: save with a note · ${KEYS.alt}+Click: settings`;
+
+    // Options are opt-in: by default a click only saves the tweet
+    const DEFAULT_SETTINGS = {
+        copyLink: false,
+        location: 'new',
+        tags: '',
+        rememberSaved: false
+    };
+    const LOCATIONS = [
+        { value: 'new', label: 'Inbox' },
+        { value: 'later', label: 'Later' },
+        { value: 'archive', label: 'Archive' }
+    ];
 
     const CLIPBOARD_PATHS = '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" /><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />';
     const svgIcon = extraPaths => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${CLIPBOARD_PATHS}${extraPaths}</svg>`;
@@ -41,9 +62,10 @@
 
     // Icon per button state; colors live in the stylesheet
     const ICON_STATES = {
-        idle: { svg: SVG_ICONS.default, title: 'Save to Readwise Reader (Alt+Click: API key)' },
+        idle: { svg: SVG_ICONS.default, title: `Save to Readwise Reader (${SHORTCUTS_HINT})` },
         saving: { svg: SVG_ICONS.check, title: 'Saving to Readwise Reader…' },
         saved: { svg: SVG_ICONS.check, title: 'Saved to Readwise Reader' },
+        remembered: { svg: SVG_ICONS.check, title: `Saved before with this browser (${SHORTCUTS_HINT})` },
         error: { svg: SVG_ICONS.error, title: 'Could not save. Click to try again' }
     };
 
@@ -65,7 +87,7 @@
         .custom-copy-icon:hover, .custom-copy-icon:focus-visible { color: var(--rw-blue); background-color: rgba(29, 155, 240, .1); outline: none; }
         .custom-copy-icon[data-state="saving"] { color: var(--rw-blue); }
         .custom-copy-icon[data-state="saving"] svg { animation: rw-pulse 1s ease-in-out infinite; }
-        .custom-copy-icon[data-state="saved"] { color: var(--rw-saved); }
+        .custom-copy-icon[data-state="saved"], .custom-copy-icon[data-state="remembered"] { color: var(--rw-saved); }
         .custom-copy-icon[data-state="error"] { color: var(--rw-red); }
         @keyframes rw-pulse { 50% { opacity: .3; } }
 
@@ -99,7 +121,7 @@
         @keyframes rw-fade-in { from { opacity: 0; } }
         .rw-dialog {
             --rw-fg: #0f1419; --rw-muted: #536471; --rw-border: #cfd9de; --rw-surface: #fff;
-            width: min(440px, 100%); box-sizing: border-box;
+            width: min(440px, 100%); max-height: 100%; overflow-y: auto; box-sizing: border-box;
             padding: 28px 32px 24px; border-radius: 16px;
             background: var(--rw-surface); color: var(--rw-fg);
             font-size: 15px; line-height: 20px;
@@ -140,10 +162,35 @@
         .rw-button-secondary:hover { background: rgba(127, 127, 127, .1); }
         .rw-button-remove { padding: 0; border: 0; background: none; color: var(--rw-red); font: inherit; font-size: 13px; cursor: pointer; }
         .rw-button-remove:hover { text-decoration: underline; }
+
+        .rw-section { margin-top: 24px; }
+        .rw-section h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 17px; line-height: 24px; font-weight: 700; }
+        .rw-badge { padding: 1px 6px; border-radius: 4px; background: var(--rw-blue); color: #fff; font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: .04em; }
+        .rw-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+        .rw-row .rw-text { flex: 1; }
+        .rw-check { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; cursor: pointer; }
+        .rw-check input { flex-shrink: 0; width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--rw-blue); cursor: pointer; }
+        .rw-label { display: block; margin-top: 16px; font-weight: 700; }
+        .rw-label + .rw-field { margin-top: 6px; }
+        .rw-hint { margin-top: 6px !important; color: var(--rw-muted); font-size: 13px; line-height: 18px; }
+        .rw-input-text { font-family: var(--rw-font); }
+        .rw-select option { background: var(--rw-surface); color: var(--rw-fg); }
+        .rw-textarea { min-height: 96px; resize: vertical; font-family: var(--rw-font); }
+        .rw-shortcuts { margin-top: 20px !important; color: var(--rw-muted); font-size: 13px; }
     `;
 
     // Stored API key, or null until the user sets one
     let apiKey = GM_getValue('apiKey', null) || null;
+    let settings = { ...DEFAULT_SETTINGS, ...(GM_getValue('settings', null) || {}) };
+
+    function saveSettings(newSettings) {
+        settings = { ...DEFAULT_SETTINGS, ...newSettings };
+        GM_setValue('settings', settings);
+    }
+
+    function parseTags(text) {
+        return [...new Set(text.split(',').map(tag => tag.trim()).filter(Boolean))];
+    }
 
     // Main function
     function main() {
@@ -166,7 +213,7 @@
 
     function registerMenuCommands() {
         if (typeof GM_registerMenuCommand === 'function') {
-            GM_registerMenuCommand('Set Readwise API key…', () => openApiKeyDialog());
+            GM_registerMenuCommand('Settings…', () => openSettingsDialog());
         }
     }
 
@@ -199,6 +246,10 @@
     }
 
     function attachCopyEvent(icon, tweet) {
+        // Shift+Click would otherwise select the text between the last click and this button
+        icon.addEventListener('mousedown', event => {
+            if (event.shiftKey) event.preventDefault();
+        });
         icon.addEventListener('click', event => {
             event.preventDefault();
             event.stopPropagation();
@@ -206,11 +257,15 @@
         });
     }
 
+    // Click: save. Shift+Click: save with a note. Alt+Click: settings
     function handleClickEvent(event, tweet, icon) {
         if (event.altKey) {
-            openApiKeyDialog();
+            openSettingsDialog();
             return;
         }
+
+        // A double click or an impatient second click would save the tweet twice
+        if (icon.dataset.state === 'saving') return;
 
         const tweetUrl = extractTweetUrl(tweet);
         if (!tweetUrl) {
@@ -218,12 +273,15 @@
             return;
         }
 
-        copyToClipboard(tweetUrl);
+        if (settings.copyLink) copyToClipboard(tweetUrl);
+        const save = event.shiftKey
+            ? () => openNoteDialog(tweetUrl, extras => saveTweetUrlToReadwise(tweetUrl, icon, extras))
+            : () => saveTweetUrlToReadwise(tweetUrl, icon);
         if (!apiKey) {
-            openApiKeyDialog({ onSaved: () => saveTweetUrlToReadwise(tweetUrl, icon) });
+            openApiKeyDialog({ onSaved: save });
             return;
         }
-        saveTweetUrlToReadwise(tweetUrl, icon);
+        save();
     }
 
     async function copyToClipboard(text) {
@@ -250,8 +308,9 @@
 
     // --- Readwise API ---
 
-    function saveTweetUrlToReadwise(tweetUrl, icon) {
-        const retry = () => saveTweetUrlToReadwise(tweetUrl, icon);
+    // extras: { notes, tags } from the note dialog; tags fall back to the default tags from the settings
+    function saveTweetUrlToReadwise(tweetUrl, icon, extras = {}) {
+        const retry = () => saveTweetUrlToReadwise(tweetUrl, icon, extras);
         const fail = (message, logDetails) => {
             console.error('Failed to save tweet URL to Readwise:', logDetails);
             setIconState(icon, 'error');
@@ -263,14 +322,19 @@
             method: 'POST',
             url: SAVE_API_URL,
             headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${apiKey}` },
-            data: JSON.stringify({ url: tweetUrl, category: 'tweet' }),
+            data: JSON.stringify(buildSavePayload(tweetUrl, extras)),
             timeout: REQUEST_TIMEOUT,
             onload: response => {
                 if ([200, 201].includes(response.status)) {
                     console.log('Tweet URL saved to Readwise:', tweetUrl);
                     setIconState(icon, 'saved');
+                    if (settings.rememberSaved) rememberTweet(tweetUrl);
                     const readerUrl = parseJson(response.responseText)?.url;
-                    showToast(response.status === 200 ? 'Already in your Reader library' : 'Saved to Reader', {
+                    // An existing document keeps its own note and tags, so say so instead of pretending they were added
+                    const alreadySaved = extras.notes?.trim()
+                        ? 'Already in your Reader library. Open it there to add your note'
+                        : 'Already in your Reader library';
+                    showToast(response.status === 200 ? alreadySaved : 'Saved to Reader', {
                         actions: readerUrl ? [{ label: 'Open', href: readerUrl }] : []
                     });
                 } else if ([401, 403].includes(response.status)) {
@@ -286,6 +350,15 @@
             onerror: error => fail('Could not reach Readwise. Check your connection.', error),
             ontimeout: () => fail('Readwise took too long to respond.', 'timeout')
         });
+    }
+
+    function buildSavePayload(tweetUrl, { notes = '', tags = settings.tags } = {}) {
+        const payload = { url: tweetUrl, category: 'tweet' };
+        if (settings.location !== DEFAULT_SETTINGS.location) payload.location = settings.location;
+        const tagList = parseTags(tags);
+        if (tagList.length) payload.tags = tagList;
+        if (notes.trim()) payload.notes = notes.trim();
+        return payload;
     }
 
     // Resolves to 'valid', 'invalid' or 'unreachable'
@@ -313,6 +386,54 @@
         } catch {
             return null;
         }
+    }
+
+    // --- Remembered saves (beta) ---
+    // Only tweets saved with this script in this browser; nothing is synced with Readwise or other devices.
+    // Stored as { statusId: savedAt } in Tampermonkey's storage.
+
+    let rememberedTweets = null;
+
+    function getRememberedTweets() {
+        if (!rememberedTweets) rememberedTweets = GM_getValue(SAVED_TWEETS_KEY, null) || {};
+        return rememberedTweets;
+    }
+
+    function tweetIdFromUrl(tweetUrl) {
+        return tweetUrl?.match(/\/status\/(\d+)/)?.[1] || null;
+    }
+
+    function isRemembered(tweetUrl) {
+        const id = tweetIdFromUrl(tweetUrl);
+        return Boolean(id && getRememberedTweets()[id]);
+    }
+
+    function rememberTweet(tweetUrl) {
+        const id = tweetIdFromUrl(tweetUrl);
+        if (!id) return;
+        // Re-read first so saves made in other tabs aren't overwritten
+        rememberedTweets = null;
+        let entries = Object.entries({ ...getRememberedTweets(), [id]: Date.now() });
+        if (entries.length > MAX_REMEMBERED_TWEETS) {
+            entries = entries.sort((a, b) => b[1] - a[1]).slice(0, MAX_REMEMBERED_TWEETS);
+        }
+        rememberedTweets = Object.fromEntries(entries);
+        GM_setValue(SAVED_TWEETS_KEY, rememberedTweets);
+    }
+
+    function forgetRememberedTweets() {
+        rememberedTweets = {};
+        GM_setValue(SAVED_TWEETS_KEY, {});
+    }
+
+    // Marks buttons on screen after the setting or the stored list changed
+    function refreshRememberedIcons() {
+        document.querySelectorAll('.custom-copy-icon').forEach(icon => {
+            if (!['idle', 'remembered'].includes(icon.dataset.state)) return;
+            const tweet = icon.closest('article');
+            const remembered = settings.rememberSaved && tweet && isRemembered(extractTweetUrl(tweet));
+            setIconState(icon, remembered ? 'remembered' : 'idle');
+        });
     }
 
     // --- Toasts ---
@@ -348,9 +469,10 @@
         setTimeout(() => toast.remove(), duration);
     }
 
-    // --- API key dialog ---
+    // --- Dialogs ---
 
-    function openApiKeyDialog({ reason = '', onSaved = null } = {}) {
+    // Opens an empty dialog with a title; the caller fills it and gets close() back
+    function openDialog(titleText) {
         document.querySelector('.rw-overlay')?.remove();
         updateTheme();
         const previousFocus = document.activeElement;
@@ -363,107 +485,19 @@
         dialog.dataset.rwTheme = document.documentElement.dataset.rwTheme;
         dialog.style.setProperty('--rw-surface', isDarkTheme() ? getComputedStyle(document.body).backgroundColor : '#fff');
 
-        const title = createElement('h2', '', 'Connect Readwise Reader');
+        const title = createElement('h2', '', titleText);
         title.id = 'rw-dialog-title';
         dialog.appendChild(title);
-        if (reason) dialog.appendChild(createElement('p', 'rw-reason', reason));
-        dialog.appendChild(createElement('p', 'rw-text', 'Paste your Readwise access token to save tweets with one click. You only need to do this once.'));
-
-        const link = createElement('a', 'rw-link', 'Get your access token ↗');
-        link.href = API_KEY_URL;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        dialog.appendChild(link);
-
-        const field = createElement('div', 'rw-field');
-        const input = createElement('input', 'rw-input');
-        Object.assign(input, { type: 'password', value: apiKey || '', placeholder: 'Access token', autocomplete: 'off', spellcheck: false });
-        input.setAttribute('aria-label', 'Readwise access token');
-        const reveal = createElement('button', 'rw-reveal', 'Show');
-        reveal.type = 'button';
-        reveal.addEventListener('click', () => {
-            const hidden = input.type === 'password';
-            input.type = hidden ? 'text' : 'password';
-            reveal.textContent = hidden ? 'Hide' : 'Show';
-            input.focus();
-        });
-        field.append(input, reveal);
-        dialog.appendChild(field);
-
-        const status = createElement('p', 'rw-status');
-        status.setAttribute('aria-live', 'polite');
-        dialog.appendChild(status);
-
-        const actions = createElement('div', 'rw-actions');
-        if (apiKey) {
-            const remove = createElement('button', 'rw-button-remove', 'Remove saved key');
-            remove.type = 'button';
-            remove.addEventListener('click', () => {
-                apiKey = null;
-                GM_setValue('apiKey', '');
-                close();
-                showToast('Readwise API key removed');
-            });
-            actions.appendChild(remove);
-        }
-        actions.appendChild(createElement('div', 'rw-spacer'));
-        const cancel = createElement('button', 'rw-button rw-button-secondary', 'Cancel');
-        cancel.type = 'button';
-        cancel.addEventListener('click', () => close());
-        const save = createElement('button', 'rw-button rw-button-primary', 'Save');
-        save.type = 'button';
-        save.addEventListener('click', () => submit());
-        actions.append(cancel, save);
-        dialog.appendChild(actions);
-
-        const setStatus = (message, type = 'info') => {
-            status.textContent = message;
-            status.dataset.type = type;
-        };
-        const updateSaveButton = () => {
-            save.disabled = !input.value.trim();
-        };
-
-        async function submit() {
-            const key = input.value.trim();
-            if (!key || save.disabled) return;
-
-            save.disabled = true;
-            setStatus('Checking your token with Readwise…');
-            const result = await validateApiKey(key);
-            if (result === 'invalid') {
-                setStatus('Readwise does not recognize this token. Copy it again from the link above.', 'error');
-                updateSaveButton();
-                input.focus();
-                return;
-            }
-            if (result === 'unreachable') {
-                setStatus('Could not reach Readwise to check the token. Try again.', 'error');
-                updateSaveButton();
-                return;
-            }
-
-            apiKey = key;
-            GM_setValue('apiKey', key);
-            close();
-            if (onSaved) onSaved();
-            else showToast('Readwise is connected');
-        }
 
         function close() {
             overlay.remove();
             if (previousFocus && previousFocus.isConnected) previousFocus.focus();
         }
 
-        input.addEventListener('input', () => {
-            setStatus('');
-            updateSaveButton();
-        });
         // Keep X's keyboard shortcuts from reacting while the dialog is open
         overlay.addEventListener('keydown', event => {
             event.stopPropagation();
             if (event.key === 'Escape') close();
-            if (event.key === 'Enter' && event.target === input) submit();
         });
         overlay.addEventListener('mousedown', event => {
             if (event.target === overlay) close();
@@ -471,9 +505,267 @@
 
         overlay.appendChild(dialog);
         document.body.appendChild(overlay);
+        return { dialog, close };
+    }
+
+    function createButton(label, className, onClick) {
+        const button = createElement('button', className, label);
+        button.type = 'button';
+        button.addEventListener('click', onClick);
+        return button;
+    }
+
+    // Cancel and a primary button, pushed to the right
+    function createDialogActions(primaryLabel, onPrimary, onCancel) {
+        const actions = createElement('div', 'rw-actions');
+        const primary = createButton(primaryLabel, 'rw-button rw-button-primary', onPrimary);
+        actions.append(
+            createElement('div', 'rw-spacer'),
+            createButton('Cancel', 'rw-button rw-button-secondary', onCancel),
+            primary
+        );
+        return { actions, primary };
+    }
+
+    // A labelled text input, select or textarea inside the bordered field style
+    function createLabelledField(labelText, control) {
+        const id = `rw-field-${Math.random().toString(36).slice(2)}`;
+        control.id = id;
+        const label = createElement('label', 'rw-label', labelText);
+        label.htmlFor = id;
+        const field = createElement('div', 'rw-field');
+        field.appendChild(control);
+        return [label, field];
+    }
+
+    function createCheckbox(labelText, checked) {
+        const label = createElement('label', 'rw-check');
+        const input = createElement('input');
+        input.type = 'checkbox';
+        input.checked = checked;
+        label.append(input, createElement('span', '', labelText));
+        return { label, input };
+    }
+
+    // --- API key dialog ---
+
+    // Access token input with a Show button, a link to get a token and a status line.
+    // verify(key) checks the key with Readwise and reports problems in the status line.
+    function createTokenField() {
+        const link = createElement('a', 'rw-link', 'Get your access token ↗');
+        link.href = API_KEY_URL;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+
+        const field = createElement('div', 'rw-field');
+        const input = createElement('input', 'rw-input');
+        Object.assign(input, { type: 'password', value: apiKey || '', placeholder: 'Access token', autocomplete: 'off', spellcheck: false });
+        input.setAttribute('aria-label', 'Readwise access token');
+        const reveal = createButton('Show', 'rw-reveal', () => {
+            const hidden = input.type === 'password';
+            input.type = hidden ? 'text' : 'password';
+            reveal.textContent = hidden ? 'Hide' : 'Show';
+            input.focus();
+        });
+        field.append(input, reveal);
+
+        const status = createElement('p', 'rw-status');
+        status.setAttribute('aria-live', 'polite');
+        const setStatus = (message, type = 'info') => {
+            status.textContent = message;
+            status.dataset.type = type;
+        };
+        input.addEventListener('input', () => setStatus(''));
+
+        async function verify(key) {
+            setStatus('Checking your token with Readwise…');
+            const result = await validateApiKey(key);
+            if (result === 'invalid') {
+                setStatus('Readwise does not recognize this token. Copy it again from the link above.', 'error');
+                input.focus();
+                return false;
+            }
+            if (result === 'unreachable') {
+                setStatus('Could not reach Readwise to check the token. Try again.', 'error');
+                return false;
+            }
+            setStatus('');
+            return true;
+        }
+
+        return { elements: [link, field, status], input, setStatus, verify };
+    }
+
+    function storeApiKey(key) {
+        apiKey = key || null;
+        GM_setValue('apiKey', key || '');
+    }
+
+    // Shown when a save needs a token first, or Readwise rejected the stored one
+    function openApiKeyDialog({ reason = '', onSaved = null } = {}) {
+        const { dialog, close } = openDialog('Connect Readwise Reader');
+        if (reason) dialog.appendChild(createElement('p', 'rw-reason', reason));
+        dialog.appendChild(createElement('p', 'rw-text', 'Paste your Readwise access token to save tweets with one click. You only need to do this once.'));
+
+        const token = createTokenField();
+        dialog.append(...token.elements);
+        dialog.appendChild(createElement('p', 'rw-hint', `You can change it later in the settings: ${KEYS.alt}+Click any save button.`));
+
+        const { actions, primary: save } = createDialogActions('Save', () => submit(), () => close());
+        dialog.appendChild(actions);
+        const updateSaveButton = () => {
+            save.disabled = !token.input.value.trim();
+        };
+
+        async function submit() {
+            const key = token.input.value.trim();
+            if (!key || save.disabled) return;
+
+            save.disabled = true;
+            const valid = await token.verify(key);
+            updateSaveButton();
+            if (!valid) return;
+
+            storeApiKey(key);
+            close();
+            if (onSaved) onSaved();
+            else showToast('Readwise is connected');
+        }
+
+        token.input.addEventListener('input', updateSaveButton);
+        token.input.addEventListener('keydown', event => {
+            if (event.key === 'Enter') submit();
+        });
+
         updateSaveButton();
-        input.focus();
-        input.select();
+        token.input.focus();
+        token.input.select();
+    }
+
+    // --- Settings dialog ---
+
+    function openSettingsDialog() {
+        const { dialog, close } = openDialog('Settings');
+
+        // Readwise connection
+        const connection = createElement('section', 'rw-section');
+        connection.appendChild(createElement('h3', '', 'Readwise access token'));
+        connection.appendChild(createElement('p', 'rw-text', apiKey
+            ? 'Connected. Paste a new token to replace it.'
+            : 'Not connected yet. Paste your token to start saving.'));
+        const token = createTokenField();
+        connection.append(...token.elements);
+        if (apiKey) {
+            const remove = createButton('Remove saved token', 'rw-button-remove', () => {
+                token.input.value = '';
+                token.setStatus('The token is removed when you click Save.');
+                token.input.focus();
+            });
+            connection.appendChild(remove);
+        }
+
+        // What a click does
+        const saving = createElement('section', 'rw-section');
+        saving.appendChild(createElement('h3', '', 'When you click save'));
+        const copyLink = createCheckbox('Also copy the tweet link to the clipboard', settings.copyLink);
+        saving.appendChild(copyLink.label);
+
+        const location = createElement('select', 'rw-input rw-input-text rw-select');
+        LOCATIONS.forEach(({ value, label }) => {
+            const option = createElement('option', '', label);
+            option.value = value;
+            option.selected = value === settings.location;
+            location.appendChild(option);
+        });
+        saving.append(...createLabelledField('Save to', location));
+
+        const tags = createElement('input', 'rw-input rw-input-text');
+        Object.assign(tags, { type: 'text', value: settings.tags, placeholder: 'e.g. twitter, to-read', autocomplete: 'off' });
+        saving.append(...createLabelledField('Tags', tags));
+        saving.appendChild(createElement('p', 'rw-hint', 'Optional. Separate tags with commas. They are added to every tweet you save.'));
+
+        // Beta: remembered saves
+        const beta = createElement('section', 'rw-section');
+        const betaTitle = createElement('h3', '', 'Show tweets you saved before');
+        betaTitle.appendChild(createElement('span', 'rw-badge', 'BETA'));
+        beta.appendChild(betaTitle);
+        const rememberSaved = createCheckbox('Mark tweets I already saved in yellow', settings.rememberSaved);
+        beta.appendChild(rememberSaved.label);
+        beta.appendChild(createElement('p', 'rw-hint',
+            'This only knows about tweets you saved with this script, in this browser, on this computer. '
+            + 'Nothing is synced with Readwise or your other devices, so tweets saved anywhere else are not marked. '
+            + 'The list stays in Tampermonkey\'s storage in this browser.'));
+
+        const rememberedCount = Object.keys(getRememberedTweets()).length;
+        if (rememberedCount) {
+            const forget = createButton(`Forget ${rememberedCount} remembered ${rememberedCount === 1 ? 'tweet' : 'tweets'}`, 'rw-button-remove', () => {
+                forgetRememberedTweets();
+                refreshRememberedIcons();
+                forget.remove();
+                showToast('Forgot the tweets saved with this browser');
+            });
+            const forgetRow = createElement('div', 'rw-row');
+            forgetRow.appendChild(forget);
+            beta.appendChild(forgetRow);
+        }
+
+        dialog.append(connection, saving, beta, createElement('p', 'rw-shortcuts', SHORTCUTS_HINT));
+
+        const { actions, primary: save } = createDialogActions('Save', async () => {
+            const key = token.input.value.trim();
+            if (key !== (apiKey || '')) {
+                if (key) {
+                    save.disabled = true;
+                    const valid = await token.verify(key);
+                    save.disabled = false;
+                    if (!valid) return;
+                }
+                storeApiKey(key);
+            }
+            saveSettings({
+                copyLink: copyLink.input.checked,
+                location: location.value,
+                tags: parseTags(tags.value).join(', '),
+                rememberSaved: rememberSaved.input.checked
+            });
+            refreshRememberedIcons();
+            close();
+            showToast('Settings saved');
+        }, () => close());
+        dialog.appendChild(actions);
+        (apiKey ? location : token.input).focus();
+    }
+
+    // --- Note dialog (Shift+Click) ---
+
+    // Asks for a note and tags for one tweet, then calls onSubmit({ notes, tags })
+    function openNoteDialog(tweetUrl, onSubmit) {
+        const { dialog, close } = openDialog('Save with a note');
+        const author = tweetUrl.match(/\/([^/]+)\/status\//)?.[1];
+        dialog.appendChild(createElement('p', 'rw-text', author
+            ? `Saving @${author}'s tweet. The note is saved with it in Reader.`
+            : 'The note is saved with the tweet in Reader.'));
+
+        const notes = createElement('textarea', 'rw-input rw-textarea');
+        notes.placeholder = 'Why are you saving this?';
+        dialog.append(...createLabelledField('Note', notes));
+
+        const tags = createElement('input', 'rw-input rw-input-text');
+        Object.assign(tags, { type: 'text', value: settings.tags, placeholder: 'e.g. twitter, to-read', autocomplete: 'off' });
+        dialog.append(...createLabelledField('Tags', tags));
+        dialog.appendChild(createElement('p', 'rw-hint', `Separate tags with commas. ${KEYS.mod}+Enter saves.`));
+
+        const submit = () => {
+            close();
+            onSubmit({ notes: notes.value, tags: tags.value });
+        };
+        const { actions } = createDialogActions('Save to Reader', submit, () => close());
+        dialog.appendChild(actions);
+
+        dialog.addEventListener('keydown', event => {
+            if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) submit();
+        });
+        notes.focus();
     }
 
     function createElement(tag, className = '', text = '') {
@@ -485,8 +777,9 @@
 
     // --- Injection ---
 
-    // Bookmark button per X layout: new (2026) layout first, then the old one
-    const BOOKMARK_SELECTORS = ['[data-engagement-action="bookmark"]', '[data-testid="bookmark"]'];
+    // Bookmark button per X layout: new (2026) layout first, then the old one.
+    // On tweets you already bookmarked, the old layout renames the button to removeBookmark.
+    const BOOKMARK_SELECTORS = ['[data-engagement-action="bookmark"]', '[data-testid="bookmark"]', '[data-testid="removeBookmark"]'];
     const SHARE_SELECTORS = ['[data-engagement-action="share"]'];
     // Reply never changes color (unlike like, repost or bookmark when active), so it's the reference for size and color
     const REPLY_SELECTORS = ['[data-engagement-action="reply"]', '[data-testid="reply"]'];
@@ -523,6 +816,7 @@
 
     function injectIcon(tweet, slot) {
         const icon = createIcon();
+        if (settings.rememberSaved && isRemembered(extractTweetUrl(tweet))) setIconState(icon, 'remembered');
         matchXIconStyle(tweet, icon);
         attachCopyEvent(icon, tweet);
         const cell = createElement('div', 'rw-cell');
@@ -558,6 +852,13 @@
     function observeTweetList() {
         new MutationObserver(scheduleInjection)
             .observe(document.body, { childList: true, subtree: true });
+        // Pick up tweets saved in other tabs when coming back to this one
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState !== 'visible') return;
+            settings = { ...DEFAULT_SETTINGS, ...(GM_getValue('settings', null) || {}) };
+            rememberedTweets = null;
+            refreshRememberedIcons();
+        });
     }
 
     // Tweets on screen but no buttons usually means X changed its markup again
