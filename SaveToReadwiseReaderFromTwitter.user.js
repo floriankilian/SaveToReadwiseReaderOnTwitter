@@ -777,8 +777,9 @@
 
     // --- Injection ---
 
-    // Bookmark button per X layout: new (2026) layout first, then the old one
-    const BOOKMARK_SELECTORS = ['[data-engagement-action="bookmark"]', '[data-testid="bookmark"]'];
+    // Bookmark button per X layout: new (2026) layout first, then the old one.
+    // On tweets you already bookmarked, the old layout renames the button to removeBookmark.
+    const BOOKMARK_SELECTORS = ['[data-engagement-action="bookmark"]', '[data-testid="bookmark"]', '[data-testid="removeBookmark"]'];
     const SHARE_SELECTORS = ['[data-engagement-action="share"]'];
     // Reply never changes color (unlike like, repost or bookmark when active), so it's the reference for size and color
     const REPLY_SELECTORS = ['[data-engagement-action="reply"]', '[data-testid="reply"]'];

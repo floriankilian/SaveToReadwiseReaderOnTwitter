@@ -143,6 +143,7 @@ The Tampermonkey permissions it asks for, and why:
 - **Changed:** saving no longer copies the tweet link to your clipboard by default. Turn on **Also copy the tweet link to the clipboard** in the settings to get the old behavior back.
 - **Changed:** the **Set Readwise API key…** menu entry is replaced by **Settings…**.
 - **Fixed:** a double click no longer saves a tweet twice, and Shift+Click no longer selects text on the page.
+- **Fixed:** tweets you already bookmarked now get the save button too, for example on a tweet's own page or in your history (`/i/history`).
 
 ## Development
 
