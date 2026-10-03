@@ -4,7 +4,7 @@
 
 A userscript that adds a save button to every tweet on Twitter/X. One click saves the tweet to [Readwise Reader](https://readwise.io/read) and copies its link to your clipboard.
 
-<img src="readme/tweet-saved.png" alt="A tweet with the yellow saved button in its action bar, and a 'Saved to Reader · Open' message" width="50%">
+<img src="docs/images/tweet-saved.png" alt="A tweet with the yellow saved button in its action bar, and a 'Saved to Reader · Open' message" width="50%">
 
 ## Features
 
@@ -21,7 +21,7 @@ Install the [Tampermonkey](https://www.tampermonkey.net/) browser extension firs
 - **Greasy Fork (recommended):** install from [Greasy Fork](https://greasyfork.org/de/scripts/597358-save-tweets-to-readwise-reader). Updates arrive automatically.
 - **GitHub:** open the [raw script](https://raw.githubusercontent.com/floriankilian/SaveToReadwiseReaderOnTwitter/main/SaveToReadwiseReaderFromTwitter.user.js) and click **Install** when Tampermonkey asks. Updates come from this repository's `main` branch.
 
-<img src="readme/tampermonkey-install-userscript.png" alt="Tampermonkey asking to install the userscript" width="50%">
+<img src="docs/images/tampermonkey-install-userscript.png" alt="Tampermonkey asking to install the userscript" width="50%">
 
 **Chrome users:** recent Chrome versions only run userscripts if you allow it. Open `chrome://extensions`, click **Details** on Tampermonkey, and turn on **Allow User Scripts**.
 
@@ -31,7 +31,7 @@ Install the [Tampermonkey](https://www.tampermonkey.net/) browser extension firs
 2. A **Connect Readwise Reader** dialog opens. Click **Get your access token** to open [readwise.io/access_token](https://readwise.io/access_token), and copy your token.
 3. Paste it into the dialog and click **Save**. The token is checked with Readwise right away, and the tweet you clicked is saved.
 
-<img src="readme/setup-dialog.png" alt="The Connect Readwise Reader dialog with a link to get the access token" width="45%">
+<img src="docs/images/setup-dialog.png" alt="The Connect Readwise Reader dialog with a link to get the access token" width="45%">
 
 To change or remove the token later, **Alt+Click** (Option+Click on Mac) any save button, or use **Set Readwise API key…** in the Tampermonkey menu.
 
@@ -39,7 +39,7 @@ To change or remove the token later, **Alt+Click** (Option+Click on Mac) any sav
 
 Click the save button on a tweet. It sits in the action bar, right before Bookmark:
 
-<img src="readme/tweet-button.png" alt="A tweet with the save button highlighted right before Bookmark" width="60%">
+<img src="docs/images/tweet-button.png" alt="A tweet with the save button highlighted right before Bookmark" width="60%">
 
 The button shows what's happening:
 
