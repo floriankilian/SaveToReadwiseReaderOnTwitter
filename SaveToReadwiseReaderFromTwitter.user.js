@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Save Tweets to Readwise Reader
 // @namespace    https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter
-// @version      1.3.0
+// @version      1.2.1
 // @description  Adds a one-click button to every tweet on Twitter/X that copies the tweet link and saves the tweet to Readwise Reader.
 // @author       sirfloriank
 // @match        https://twitter.com/*
@@ -34,9 +34,9 @@
     const MAX_REMEMBERED_TWEETS = 5000;
     const SHORTCUTS_HINT = 'Click: save · Shift+Click: save with a note · Alt+Click: settings';
 
-    // Every option keeps the script's original behavior by default
+    // Options are opt-in: by default a click only saves the tweet
     const DEFAULT_SETTINGS = {
-        copyLink: true,
+        copyLink: false,
         location: 'new',
         tags: '',
         rememberSaved: false

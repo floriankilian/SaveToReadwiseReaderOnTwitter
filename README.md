@@ -2,7 +2,7 @@
 
 [![Tampermonkey](https://img.shields.io/badge/Tampermonkey-userscript-004B5F?logo=tampermonkey&logoColor=white)](https://www.tampermonkey.net/) [![Greasy Fork](https://img.shields.io/badge/Greasy%20Fork-install-670000)](https://greasyfork.org/de/scripts/597358-save-tweets-to-readwise-reader) [![Lint](https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/actions/workflows/lint.yml/badge.svg)](https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/actions/workflows/lint.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/blob/main/LICENSE)
 
-A userscript that adds a save button to every tweet on Twitter/X. One click saves the tweet to [Readwise Reader](https://readwise.io/read) and copies its link to your clipboard.
+A userscript that adds a save button to every tweet on Twitter/X. One click saves the tweet to [Readwise Reader](https://readwise.io/read).
 
 <img src="docs/images/tweet-saved.png" alt="A tweet with the yellow saved button in its action bar, and a 'Saved to Reader · Open' message" width="600">
 
@@ -13,7 +13,7 @@ A userscript that adds a save button to every tweet on Twitter/X. One click save
 - **No duplicates to worry about:** if a tweet is already in your library, you're told so.
 - **Guided setup:** the first click asks for your Readwise access token, checks it with Readwise, and remembers it.
 - **Notes per tweet:** Shift+Click to add a note and tags to the tweet you're saving.
-- **Optional settings:** choose where tweets land in Reader, add default tags, or turn off copying the link. Everything is off or unchanged by default.
+- **Optional settings:** choose where tweets land in Reader, add default tags, or also copy the tweet link to your clipboard. Everything extra is off by default.
 - **Fits into X:** follows X's light, dim and dark themes, and works with both X's current and its newer layout.
 
 ## Install
@@ -62,11 +62,11 @@ Notes and tags are meant for tweets that are new to your library. If the tweet i
 
 ## Settings
 
-Open the settings with **Alt+Click** on any save button, or with **Settings…** in the Tampermonkey menu. All options are optional; without changing anything, the script behaves as described above.
+Open the settings with **Alt+Click** on any save button, or with **Settings…** in the Tampermonkey menu. All options are optional; by default a click only saves the tweet.
 
 | Setting | Default | What it does |
 |---|---|---|
-| Copy the tweet link to the clipboard | On | Turn off if you only want to save to Reader |
+| Copy the tweet link to the clipboard | Off | Also copies the tweet's link when you save it |
 | Save to | Inbox | Where new tweets land in Reader: Inbox, Later or Archive |
 | Tags | None | Comma-separated tags added to every saved tweet. You can change them per tweet with Shift+Click |
 | Show tweets you saved before (beta) | Off | Marks tweets you already saved in yellow when you see them again |
