@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Save Tweets to Readwise Reader
 // @namespace    https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter
-// @version      1.2.0
+// @version      1.2.1
 // @description  Adds a one-click button to every tweet on Twitter/X that copies the tweet link and saves the tweet to Readwise Reader.
 // @author       sirfloriank
 // @match        https://twitter.com/*
@@ -55,9 +55,10 @@
         .rw-cell { display: flex; align-items: center; }
         .custom-copy-icon {
             display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-            width: 34px; height: 34px; margin: 0; padding: 8px; box-sizing: border-box;
+            width: calc(var(--rw-icon-size, 18px) + 16px); height: calc(var(--rw-icon-size, 18px) + 16px);
+            margin: 0; padding: 8px; box-sizing: border-box;
             border: 0; border-radius: 9999px; background: transparent;
-            color: rgb(113, 118, 123); cursor: pointer;
+            color: var(--rw-icon-color, rgb(113, 118, 123)); cursor: pointer;
             transition: color .15s, background-color .15s;
         }
         .custom-copy-icon svg { display: block; width: 100%; height: 100%; }
@@ -487,6 +488,8 @@
     // Bookmark button per X layout: new (2026) layout first, then the old one
     const BOOKMARK_SELECTORS = ['[data-engagement-action="bookmark"]', '[data-testid="bookmark"]'];
     const SHARE_SELECTORS = ['[data-engagement-action="share"]'];
+    // Reply never changes color (unlike like, repost or bookmark when active), so it's the reference for size and color
+    const REPLY_SELECTORS = ['[data-engagement-action="reply"]', '[data-testid="reply"]'];
     const MISSING_BUTTONS_CHECK_DELAY = 5000;
 
     // First element matching one of the selectors that belongs to this tweet and not to a nested one
@@ -509,8 +512,18 @@
         return null;
     }
 
+    // X uses bigger icons for the main tweet on its own page, and a different gray per theme
+    function matchXIconStyle(tweet, icon) {
+        const replyIcon = findOwnElement(tweet, REPLY_SELECTORS)?.querySelector('svg');
+        const size = replyIcon?.getBoundingClientRect().width;
+        if (!size) return;
+        icon.style.setProperty('--rw-icon-size', `${size}px`);
+        icon.style.setProperty('--rw-icon-color', getComputedStyle(replyIcon).color);
+    }
+
     function injectIcon(tweet, slot) {
         const icon = createIcon();
+        matchXIconStyle(tweet, icon);
         attachCopyEvent(icon, tweet);
         const cell = createElement('div', 'rw-cell');
         cell.appendChild(icon);
