@@ -86,11 +86,15 @@ The button's tooltip and the dialogs show the key names for your system.
 2. Write your note. The tags field starts with your default tags from the settings; change them for this tweet if you like.
 3. Click **Save to Reader**, or press **Ctrl+Enter** (**⌘ Cmd+Enter** on Mac).
 
+<img src="docs/images/note-dialog.png" alt="The Save with a note dialog for a tweet by @ReadwiseReader, with the note 'Great thread on agents' and an empty tags field" width="480">
+
 Notes and tags are meant for tweets that are new to your library. If the tweet is already there, they may not be added, so the message links you to the tweet in Reader to add the note yourself.
 
 ## Settings
 
 Open the settings with **Alt+Click** (**⌥ Option+Click** on Mac) on any save button, or with **Settings…** in the Tampermonkey menu. All options are optional; by default a click only saves the tweet.
+
+<img src="docs/images/settings-dialog.png" alt="The Settings dialog: the hidden access token with a Remove saved token link, the copy-link checkbox, Save to Inbox, a Tags field, and the beta option Mark tweets I already saved in yellow turned on" width="480">
 
 | Setting | Default | What it does |
 |---|---|---|
