@@ -4,7 +4,7 @@
 
 A userscript that adds a save button to every tweet on Twitter/X. One click saves the tweet to [Readwise Reader](https://readwise.io/read) and copies its link to your clipboard.
 
-<img src="readme/tweet-saved.png" alt="A tweet's action bar with the yellow saved button, and a 'Saved to Reader · Open' message" width="60%">
+<img src="readme/tweet-saved.png" alt="A tweet with the yellow saved button in its action bar, and a 'Saved to Reader · Open' message" width="50%">
 
 ## Features
 
@@ -39,7 +39,7 @@ To change or remove the token later, **Alt+Click** (Option+Click on Mac) any sav
 
 Click the save button on a tweet. It sits in the action bar, right before Bookmark:
 
-<img src="readme/tweet-button.png" alt="A tweet with the save button highlighted between the like count and Bookmark" width="50%">
+<img src="readme/tweet-button.png" alt="A tweet with the save button highlighted right before Bookmark" width="60%">
 
 The button shows what's happening:
 
