@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Save Tweets to Readwise Reader
 // @namespace    https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter
-// @version      1.1.0
+// @version      1.2.0
 // @description  Adds a one-click button to every tweet on Twitter/X that copies the tweet link and saves the tweet to Readwise Reader.
 // @author       sirfloriank
 // @match        https://twitter.com/*
@@ -52,8 +52,10 @@
             --rw-font: TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         :root[data-rw-theme="light"] { --rw-saved: #B39700; }
 
+        .rw-cell { display: flex; align-items: center; }
         .custom-copy-icon {
-            display: inline-flex; align-items: center; justify-content: center;
+            display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+            width: 34px; height: 34px; margin: 0; padding: 8px; box-sizing: border-box;
             border: 0; border-radius: 9999px; background: transparent;
             color: rgb(113, 118, 123); cursor: pointer;
             transition: color .15s, background-color .15s;
@@ -149,6 +151,7 @@
             registerMenuCommands();
             observeTweetList();
             injectIconsToExistingTweets();
+            setTimeout(warnIfButtonsMissing, MISSING_BUTTONS_CHECK_DELAY);
         } catch (e) {
             console.error('Error in main function:', e);
         }
@@ -231,12 +234,17 @@
         }
     }
 
+    // New layout: the timeline entry wrapper carries the tweet path in data-href.
+    // Old layout and the main tweet on a status page: the timestamp link, else the first status link.
     function extractTweetUrl(tweet) {
-        const statusLink = tweet.querySelector('a[href*="/status/"]');
-        if (!statusLink) return null;
+        const href = tweet.closest('[data-timeline-entry][data-href]')?.dataset.href
+            || tweet.querySelector('a[href*="/status/"]:has(> time)')?.getAttribute('href')
+            || tweet.querySelector('a[href*="/status/"]')?.getAttribute('href');
+        if (!href) return null;
 
-        const relativeLink = statusLink.getAttribute('href').split('?')[0].split('/photo/')[0];
-        return `${BASE_URL}${relativeLink}`;
+        // Keep only /user/status/123, dropping /photo/1, /analytics, query strings etc.
+        const path = new URL(href, location.origin).pathname.match(/^\/[^/]+\/status\/\d+/)?.[0];
+        return path ? `${BASE_URL}${path}` : null;
     }
 
     // --- Readwise API ---
@@ -476,54 +484,74 @@
 
     // --- Injection ---
 
-    function injectIcon(tweet) {
+    // Bookmark button per X layout: new (2026) layout first, then the old one
+    const BOOKMARK_SELECTORS = ['[data-engagement-action="bookmark"]', '[data-testid="bookmark"]'];
+    const SHARE_SELECTORS = ['[data-engagement-action="share"]'];
+    const MISSING_BUTTONS_CHECK_DELAY = 5000;
+
+    // First element matching one of the selectors that belongs to this tweet and not to a nested one
+    function findOwnElement(tweet, selectors) {
+        for (const selector of selectors) {
+            const element = [...tweet.querySelectorAll(selector)].find(el => el.closest('article') === tweet);
+            if (element) return element;
+        }
+        return null;
+    }
+
+    // Where the button goes in the tweet's action bar: right before bookmark, else before share
+    function findButtonSlot(tweet) {
+        const bookmark = findOwnElement(tweet, BOOKMARK_SELECTORS);
+        if (bookmark) return { parent: bookmark.parentElement.parentElement, before: bookmark.parentElement };
+
+        const share = findOwnElement(tweet, SHARE_SELECTORS);
+        if (share) return { parent: share.parentElement, before: share };
+
+        return null;
+    }
+
+    function injectIcon(tweet, slot) {
         const icon = createIcon();
-        adjustIconStyle(tweet, icon);
         attachCopyEvent(icon, tweet);
-        tweet.appendChild(icon);
-    }
-
-    function adjustIconStyle(tweet, icon) {
-        const style = tweetHasViews(tweet) ? {
-            width: '22px',
-            height: '22px',
-            right: '64px'
-        } : {
-            width: '19px',
-            height: '19px',
-            right: '72px'
-        };
-        applyIconStyles(icon, style);
-    }
-
-    function applyIconStyles(icon, styles) {
-        const defaults = {
-            padding: '2px 5px',
-            margin: '2px',
-            position: 'absolute',
-            bottom: '9px',
-            boxSizing: 'content-box'
-        };
-        Object.assign(icon.style, { ...defaults, ...styles });
-    }
-
-    function tweetHasViews(tweet) {
-        return [...tweet.querySelectorAll('span')].some(span => span.textContent.includes("Views"));
+        const cell = createElement('div', 'rw-cell');
+        cell.appendChild(icon);
+        slot.parent.insertBefore(cell, slot.before);
     }
 
     function injectIconsToExistingTweets() {
-        const tweets = document.querySelectorAll('article[data-testid="tweet"]:not(.has-custom-icon)');
-        if (tweets.length) updateTheme();
-        tweets.forEach(tweet => {
-            tweet.classList.add('has-custom-icon');
-            injectIcon(tweet);
+        let themeUpdated = false;
+        document.querySelectorAll('article').forEach(tweet => {
+            const slot = findButtonSlot(tweet);
+            if (!slot || slot.parent.querySelector(':scope > .rw-cell')) return;
+
+            if (!themeUpdated) {
+                updateTheme();
+                themeUpdated = true;
+            }
+            injectIcon(tweet, slot);
         });
     }
 
+    // Batch the many mutations X makes while scrolling into one pass per frame
+    let injectionScheduled = false;
+    function scheduleInjection() {
+        if (injectionScheduled) return;
+        injectionScheduled = true;
+        requestAnimationFrame(() => {
+            injectionScheduled = false;
+            injectIconsToExistingTweets();
+        });
+    }
 
     function observeTweetList() {
-        new MutationObserver(injectIconsToExistingTweets)
+        new MutationObserver(scheduleInjection)
             .observe(document.body, { childList: true, subtree: true });
+    }
+
+    // Tweets on screen but no buttons usually means X changed its markup again
+    function warnIfButtonsMissing() {
+        if (document.querySelector('article') && !document.querySelector('.custom-copy-icon')) {
+            console.warn('[Save to Readwise Reader] Tweets found, but no action bar matched. X may have changed its layout; please report this at https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/issues');
+        }
     }
 
     // Initialize script
