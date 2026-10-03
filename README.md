@@ -4,7 +4,7 @@
 
 A userscript that adds a save button to every tweet on Twitter/X. One click saves the tweet to [Readwise Reader](https://readwise.io/read).
 
-<img src="docs/images/tweet-saved.png" alt="A tweet with the yellow saved button in its action bar, and a 'Saved to Reader · Open' message" width="600">
+<img src="https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/raw/main/docs/images/tweet-saved.png" alt="A tweet with the yellow saved button in its action bar, and a 'Saved to Reader · Open' message" width="600">
 
 ## Features
 
@@ -42,7 +42,7 @@ Install the [Tampermonkey](https://www.tampermonkey.net/) browser extension firs
 - **Greasy Fork (recommended):** install from [Greasy Fork](https://greasyfork.org/de/scripts/597358-save-tweets-to-readwise-reader). Updates arrive automatically.
 - **GitHub:** open the [raw script](https://raw.githubusercontent.com/floriankilian/SaveToReadwiseReaderOnTwitter/main/SaveToReadwiseReaderFromTwitter.user.js) and click **Install** when Tampermonkey asks. Updates come from this repository's `main` branch.
 
-<img src="docs/images/tampermonkey-install-userscript.png" alt="Tampermonkey asking to install the userscript" width="720">
+<img src="https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/raw/main/docs/images/tampermonkey-install-userscript.png" alt="Tampermonkey asking to install the userscript" width="720">
 
 **Chrome users:** recent Chrome versions only run userscripts if you allow it. Open `chrome://extensions`, click **Details** on Tampermonkey, and turn on **Allow User Scripts**.
 
@@ -52,7 +52,7 @@ Install the [Tampermonkey](https://www.tampermonkey.net/) browser extension firs
 2. A **Connect Readwise Reader** dialog opens. Click **Get your access token** to open [readwise.io/access_token](https://readwise.io/access_token), and copy your token.
 3. Paste it into the dialog and click **Save**. The token is checked with Readwise right away, and the tweet you clicked is saved.
 
-<img src="docs/images/setup-dialog.png" alt="The Connect Readwise Reader dialog with a link to get the access token" width="480">
+<img src="https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/raw/main/docs/images/setup-dialog.png" alt="The Connect Readwise Reader dialog with a link to get the access token" width="480">
 
 To change or remove the token later, open the [settings](#settings): **Alt+Click** (**⌥ Option+Click** on Mac) any save button, or use **Settings…** in the Tampermonkey menu.
 
@@ -60,7 +60,7 @@ To change or remove the token later, open the [settings](#settings): **Alt+Click
 
 Click the save button on a tweet. It sits in the action bar, right before Bookmark:
 
-<img src="docs/images/tweet-button.png" alt="A tweet with the save button highlighted right before Bookmark" width="600">
+<img src="https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/raw/main/docs/images/tweet-button.png" alt="A tweet with the save button highlighted right before Bookmark" width="600">
 
 The button shows what's happening:
 
@@ -86,7 +86,7 @@ The button's tooltip and the dialogs show the key names for your system.
 2. Write your note. The tags field starts with your default tags from the settings; change them for this tweet if you like.
 3. Click **Save to Reader**, or press **Ctrl+Enter** (**⌘ Cmd+Enter** on Mac).
 
-<img src="docs/images/note-dialog.png" alt="The Save with a note dialog for a tweet by @ReadwiseReader, with the note 'Great thread on agents' and an empty tags field" width="480">
+<img src="https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/raw/main/docs/images/note-dialog.png" alt="The Save with a note dialog for a tweet by @ReadwiseReader, with the note 'Great thread on agents' and an empty tags field" width="480">
 
 Notes and tags are meant for tweets that are new to your library. If the tweet is already there, they may not be added, so the message links you to the tweet in Reader to add the note yourself.
 
@@ -94,7 +94,7 @@ Notes and tags are meant for tweets that are new to your library. If the tweet i
 
 Open the settings with **Alt+Click** (**⌥ Option+Click** on Mac) on any save button, or with **Settings…** in the Tampermonkey menu. All options are optional; by default a click only saves the tweet.
 
-<img src="docs/images/settings-dialog.png" alt="The Settings dialog: the hidden access token with a Remove saved token link, the copy-link checkbox, Save to Inbox, a Tags field, and the beta option Mark tweets I already saved in yellow turned on" width="480">
+<img src="https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/raw/main/docs/images/settings-dialog.png" alt="The Settings dialog: the hidden access token with a Remove saved token link, the copy-link checkbox, Save to Inbox, a Tags field, and the beta option Mark tweets I already saved in yellow turned on" width="480">
 
 | Setting | Default | What it does |
 |---|---|---|
@@ -108,7 +108,7 @@ Open the settings with **Alt+Click** (**⌥ Option+Click** on Mac) on any save b
 
 ## How it works, and what it can access
 
-The whole script is a single file with no build step and no dependencies, so what you install is exactly [`SaveToReadwiseReaderFromTwitter.user.js`](SaveToReadwiseReaderFromTwitter.user.js) in this repository.
+The whole script is a single file with no build step and no dependencies, so what you install is exactly [`SaveToReadwiseReaderFromTwitter.user.js`](https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/blob/main/SaveToReadwiseReaderFromTwitter.user.js) in this repository.
 
 - **Where it runs:** only on `twitter.com`, `mobile.twitter.com`, `tweetdeck.twitter.com` and `x.com` pages.
 - **What it reads:** only the link of the tweet whose button you click. It doesn't read your timeline, messages or account.
