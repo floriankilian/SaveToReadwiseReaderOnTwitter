@@ -1,62 +1,119 @@
-# Save Tweets to Readwise Reader with Tampermonkey
+# Save Tweets to Readwise Reader
 
-[![Tampermonkey](https://img.shields.io/badge/Tampermonkey-userscript-004B5F?logo=tampermonkey&logoColor=white)](https://www.tampermonkey.net/) [![Greasy Fork](https://img.shields.io/badge/Greasy%20Fork-install-670000)](https://greasyfork.org/de/scripts/597358-save-tweets-to-readwise-reader) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/blob/main/LICENSE)
+[![Tampermonkey](https://img.shields.io/badge/Tampermonkey-userscript-004B5F?logo=tampermonkey&logoColor=white)](https://www.tampermonkey.net/) [![Greasy Fork](https://img.shields.io/badge/Greasy%20Fork-install-670000)](https://greasyfork.org/de/scripts/597358-save-tweets-to-readwise-reader) [![Lint](https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/actions/workflows/lint.yml/badge.svg)](https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/actions/workflows/lint.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/blob/main/LICENSE)
 
-The "Save Tweets to Readwise Reader" userscript adds a button to every tweet on Twitter/X. One click copies the tweet's URL to your clipboard, without going through any dropdowns, and saves the tweet to [Readwise Reader](https://readwise.io/read).
+A userscript that adds a save button to every tweet on Twitter/X. One click saves the tweet to [Readwise Reader](https://readwise.io/read) and copies its link to your clipboard.
 
-## How to Install
-### Setup of Tampermonkey and the Userscript
-Install the [Tampermonkey](https://www.tampermonkey.net/) browser extension first, then pick one of the options below.
+<img src="readme/tweet-saved.png" alt="A tweet's action bar with the yellow saved button, and a 'Saved to Reader · Open' message" width="60%">
 
-**Option A: Greasy Fork (recommended)** Install directly from [Greasy Fork](https://greasyfork.org/de/scripts/597358-save-tweets-to-readwise-reader). One click, and you'll get automatic update notifications through Greasy Fork's own update channel.
+## Features
 
-**Option B: directly from GitHub**
-1. Open the script in [Raw View](https://raw.githubusercontent.com/floriankilian/SaveToReadwiseReaderOnTwitter/main/SaveToReadwiseReaderFromTwitter.user.js).
-2. Tampermonkey will prompt you to install the userscript. Click Install.
+- **One click per tweet:** the button sits in the tweet's action bar, next to Bookmark.
+- **Clear feedback:** the button shows when a save is in progress, done or failed, and a short message confirms it, with a link to open the tweet in Reader.
+- **No duplicates to worry about:** if a tweet is already in your library, you're told so.
+- **Guided setup:** the first click asks for your Readwise access token, checks it with Readwise, and remembers it.
+- **Fits into X:** follows X's light, dim and dark themes, and works with both X's current and its newer layout.
 
-<img src="readme/tampermonkey-install-userscript.png" alt="Install Userscript on Tampermonkey" width="50%">
+## Install
 
-With option B, the script updates itself from this repo whenever a new version is pushed (via the `@updateURL`/`@downloadURL` metadata).
+Install the [Tampermonkey](https://www.tampermonkey.net/) browser extension first, then pick one option:
 
-### Get a Readwise API key
-1. Get your Readwise [API key](https://readwise.io/access_token) and copy it to your clipboard.
+- **Greasy Fork (recommended):** install from [Greasy Fork](https://greasyfork.org/de/scripts/597358-save-tweets-to-readwise-reader). Updates arrive automatically.
+- **GitHub:** open the [raw script](https://raw.githubusercontent.com/floriankilian/SaveToReadwiseReaderOnTwitter/main/SaveToReadwiseReaderFromTwitter.user.js) and click **Install** when Tampermonkey asks. Updates come from this repository's `main` branch.
 
-### Configuration
-1. Open any page on Twitter/X.
-2. Alt-click (Option-click on Mac) the new clipboard icon to set your API key.
+<img src="readme/tampermonkey-install-userscript.png" alt="Tampermonkey asking to install the userscript" width="50%">
 
-<img src="readme/APIKey-Request.png" alt="Provide your API Key" width="40%">
+**Chrome users:** recent Chrome versions only run userscripts if you allow it. Open `chrome://extensions`, click **Details** on Tampermonkey, and turn on **Allow User Scripts**.
 
-3. Paste the API key from your clipboard.
-4. Voila!
+## Setup
 
-<img src="readme/tweet.png" alt="How it will be displayed" width="50%">
+1. Open Twitter/X and click the save button on any tweet.
+2. A **Connect Readwise Reader** dialog opens. Click **Get your access token** to open [readwise.io/access_token](https://readwise.io/access_token), and copy your token.
+3. Paste it into the dialog and click **Save**. The token is checked with Readwise right away, and the tweet you clicked is saved.
 
-## How to use
-1. Click the clipboard icon. It turns blue once the link is copied to your clipboard, and yellow once the tweet has been saved to Readwise Reader. It turns red if something went wrong (e.g. no API key set).
+<img src="readme/setup-dialog.png" alt="The Connect Readwise Reader dialog with a link to get the access token" width="45%">
 
-<img src="readme/tweet-saved.png" alt="Saved tweet" width="50%">
+To change or remove the token later, **Alt+Click** (Option+Click on Mac) any save button, or use **Set Readwise API key…** in the Tampermonkey menu.
 
-<img src="readme/HowToUse.gif" alt="How to use" width="50%">
+## Usage
 
+Click the save button on a tweet. It sits in the action bar, right before Bookmark:
 
-## Possible future improvements:
-- ~~Optimize API Key Handling~~
-    - ~~checking for the API key only when the user decides to save a tweet to reduce potential annoyance~~
-    - ~~update the stored API key without clearing browser data or changing Tampermonkey settings (e.g., Alt + Click on the save icon)~~
-- ~~Improve Error Handling, e.g. red icon on an error~~
-- Refactor and Modularize Code
-- ~~Get the author of the tweet instead of "twitter.com"~~
+<img src="readme/tweet-button.png" alt="A tweet with the save button highlighted between the like count and Bookmark" width="50%">
 
-## Known issues:
-- If the selected tweet is a reply to another "thread"-tweet, the reply will be parsed by Reader instead of the "reply"-Tweet.
-- Tweets can be saved multiple times, as there is currently no check whether the tweet was already saved.
+The button shows what's happening:
+
+| Button | Meaning |
+|---|---|
+| Gray | Not saved yet |
+| Blue, pulsing | Saving… |
+| Yellow with a check mark | Saved to Reader |
+| Red with an exclamation mark | Couldn't save. The message says why; click **Retry** or the button again |
+
+## How it works, and what it can access
+
+The whole script is a single file with no build step and no dependencies, so what you install is exactly [`SaveToReadwiseReaderFromTwitter.user.js`](SaveToReadwiseReaderFromTwitter.user.js) in this repository.
+
+- **Where it runs:** only on `twitter.com`, `mobile.twitter.com`, `tweetdeck.twitter.com` and `x.com` pages.
+- **What it reads:** only the link of the tweet whose button you click. It doesn't read your timeline, messages or account.
+- **What it sends, and when:** nothing until you click. Then it makes one request to Readwise's [Reader API](https://readwise.io/reader_api) with the tweet's link: `POST https://readwise.io/api/v3/save/`. When you enter a token, it checks it once with `GET https://readwise.io/api/v2/auth/`.
+- **Who it talks to:** only `readwise.io`. Tampermonkey enforces this through the script's `@connect readwise.io` line.
+- **Where your token is stored:** in Tampermonkey's storage for this script, in your browser. It is only ever sent to Readwise, to authorize your saves. You can remove it from the setup dialog at any time.
+- **No tracking:** no analytics, no third-party code, no data collection.
+
+The Tampermonkey permissions it asks for, and why:
+
+| Permission | Used for |
+|---|---|
+| `GM_getValue`, `GM_setValue` | Remembering your Readwise token |
+| `GM_xmlhttpRequest` | Talking to the Readwise API. Regular page scripts on x.com can't contact other domains |
+| `GM_registerMenuCommand` | The **Set Readwise API key…** entry in the Tampermonkey menu |
+
+## Troubleshooting
+
+- **No save buttons appear:** check that Tampermonkey is allowed to run userscripts (see the Chrome note under [Install](#install)), and that the script is enabled in the Tampermonkey menu.
+- **Still no buttons:** X may have changed its page structure. Open the browser console (F12). If you see a `[Save to Readwise Reader]` warning, please [open an issue](https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/issues).
+
+## Known issues
+
+- When you save a reply that's part of a thread, Reader may import the original thread instead of just the reply.
+
+## Development
+
+The script is plain JavaScript in a single file. To work on it with instant reloads:
+
+1. In `chrome://extensions`, open Tampermonkey's **Details** and turn on **Allow access to file URLs**.
+2. Create a new script in Tampermonkey that loads your local copy. Tampermonkey ignores the header of a required file, so the `@grant`, `@connect` and `@match` lines must be in this loader:
+
+   ```js
+   // ==UserScript==
+   // @name         [DEV] Save Tweets to Readwise Reader
+   // @namespace    https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter/dev
+   // @version      0.0.0-dev
+   // @match        https://twitter.com/*
+   // @match        https://mobile.twitter.com/*
+   // @match        https://x.com/*
+   // @grant        GM_setValue
+   // @grant        GM_getValue
+   // @grant        GM_xmlhttpRequest
+   // @grant        GM_registerMenuCommand
+   // @connect      readwise.io
+   // @require      file:///C:/path/to/SaveToReadwiseReaderOnTwitter/SaveToReadwiseReaderFromTwitter.user.js
+   // ==/UserScript==
+   ```
+
+3. Disable the installed release version while developing, and reload X after each change.
+
+Linting runs on every pull request. To run it locally:
+
+```bash
+npm install
+npm run lint
+```
 
 ## Credits
-- [Readwise](https://readwise.io/)
-- [Tampermonkey](https://tampermonkey.net/)
-- [One Click Copy Link Button for Twitter](https://greasyfork.org/ckb/scripts/482477-one-click-copy-link-button-for-twitter-x/feedback)
 
-
-## Find more useful tools for Readwise Reader
-[awesome-readwise](https://github.com/Scarvy/awesome-readwise)
+- [Readwise](https://readwise.io/) and its [Reader API](https://readwise.io/reader_api)
+- [Tampermonkey](https://www.tampermonkey.net/)
+- Inspired by [One Click Copy Link Button for Twitter](https://greasyfork.org/scripts/482477-one-click-copy-link-button-for-twitter-x)
+- More tools for Readwise Reader: [awesome-readwise](https://github.com/Scarvy/awesome-readwise)
