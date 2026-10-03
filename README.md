@@ -13,7 +13,8 @@ A userscript that adds a save button to every tweet on Twitter/X. One click save
 - **No duplicates to worry about:** if a tweet is already in your library, you're told so.
 - **Guided setup:** the first click asks for your Readwise access token, checks it with Readwise, and remembers it.
 - **Notes per tweet:** Shift+Click (⇧ Shift+Click on Mac) to add a note and tags to the tweet you're saving.
-- **Optional settings:** choose where tweets land in Reader, add default tags, or also copy the tweet link to your clipboard. Everything extra is off by default.
+- **Optional settings:** Alt+Click (⌥ Option+Click on Mac) to choose where tweets land in Reader, add default tags, or also copy the tweet link to your clipboard. Everything extra is off by default.
+- **See what you saved (beta):** optionally mark tweets you already saved with this browser in yellow.
 - **Fits into X:** follows X's light, dim and dark themes, and works with both X's current and its newer layout.
 
 ## Install
@@ -49,7 +50,7 @@ The button shows what's happening:
 |---|---|
 | Gray | Not saved yet |
 | Blue, pulsing | Saving… |
-| Yellow with a check mark | Saved to Reader |
+| Yellow with a check mark | Saved to Reader. With the [beta setting](#settings) on, tweets you saved before with this browser also show up yellow |
 | Red with an exclamation mark | Couldn't save. The message says why; click **Retry** or the button again |
 
 | Windows / Linux | Mac | What it does |
@@ -60,6 +61,12 @@ The button shows what's happening:
 | **Ctrl+Enter** | **⌘ Cmd+Enter** | In the note dialog: save |
 
 The button's tooltip and the dialogs show the key names for your system.
+
+### Save with a note
+
+1. **Shift+Click** (**⇧ Shift+Click** on Mac) the save button.
+2. Write your note. The tags field starts with your default tags from the settings; change them for this tweet if you like.
+3. Click **Save to Reader**, or press **Ctrl+Enter** (**⌘ Cmd+Enter** on Mac).
 
 Notes and tags are meant for tweets that are new to your library. If the tweet is already there, they may not be added, so the message links you to the tweet in Reader to add the note yourself.
 
@@ -105,6 +112,19 @@ The Tampermonkey permissions it asks for, and why:
 ## Known issues
 
 - When you save a reply that's part of a thread, Reader may import the original thread instead of just the reply.
+
+## Changelog
+
+### 1.3.0
+
+- **New settings dialog:** Alt+Click (⌥ Option+Click on Mac) a save button, or use **Settings…** in the Tampermonkey menu. It holds your Readwise access token and all options.
+- **Save with a note:** Shift+Click (⇧ Shift+Click on Mac) to add a note and tags to a tweet.
+- **Choose where tweets land:** Inbox, Later or Archive.
+- **Default tags** for every saved tweet, empty unless you add some.
+- **Beta: show tweets you saved before** with this browser, off by default.
+- **Changed:** saving no longer copies the tweet link to your clipboard by default. Turn on **Also copy the tweet link to the clipboard** in the settings to get the old behavior back.
+- **Changed:** the **Set Readwise API key…** menu entry is replaced by **Settings…**.
+- **Fixed:** a double click no longer saves a tweet twice, and Shift+Click no longer selects text on the page.
 
 ## Development
 
