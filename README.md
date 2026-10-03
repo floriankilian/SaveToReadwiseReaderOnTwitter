@@ -12,6 +12,8 @@ A userscript that adds a save button to every tweet on Twitter/X. One click save
 - **Clear feedback:** the button shows when a save is in progress, done or failed, and a short message confirms it, with a link to open the tweet in Reader.
 - **No duplicates to worry about:** if a tweet is already in your library, you're told so.
 - **Guided setup:** the first click asks for your Readwise access token, checks it with Readwise, and remembers it.
+- **Notes per tweet:** Shift+Click to add a note and tags to the tweet you're saving.
+- **Optional settings:** choose where tweets land in Reader, add default tags, or turn off copying the link. Everything is off or unchanged by default.
 - **Fits into X:** follows X's light, dim and dark themes, and works with both X's current and its newer layout.
 
 ## Install
@@ -33,7 +35,7 @@ Install the [Tampermonkey](https://www.tampermonkey.net/) browser extension firs
 
 <img src="docs/images/setup-dialog.png" alt="The Connect Readwise Reader dialog with a link to get the access token" width="480">
 
-To change or remove the token later, **Alt+Click** (Option+Click on Mac) any save button, or use **Set Readwise API key…** in the Tampermonkey menu.
+To change or remove the token later, open the [settings](#settings) and click **Change token**, or use **Set Readwise API key…** in the Tampermonkey menu.
 
 ## Usage
 
@@ -50,24 +52,46 @@ The button shows what's happening:
 | Yellow with a check mark | Saved to Reader |
 | Red with an exclamation mark | Couldn't save. The message says why; click **Retry** or the button again |
 
+| Shortcut | What it does |
+|---|---|
+| **Click** | Save the tweet |
+| **Shift+Click** | Save the tweet with a note and tags. Ctrl+Enter (⌘+Enter on Mac) in the dialog saves |
+| **Alt+Click** (Option+Click on Mac) | Open the settings |
+
+Notes and tags are meant for tweets that are new to your library. If the tweet is already there, Reader keeps the existing document, so the message links you to it to add the note yourself.
+
+## Settings
+
+Open the settings with **Alt+Click** on any save button, or with **Settings…** in the Tampermonkey menu. All options are optional; without changing anything, the script behaves as described above.
+
+| Setting | Default | What it does |
+|---|---|---|
+| Copy the tweet link to the clipboard | On | Turn off if you only want to save to Reader |
+| Save to | Inbox | Where new tweets land in Reader: Inbox, Later or Archive |
+| Tags | None | Comma-separated tags added to every saved tweet. You can change them per tweet with Shift+Click |
+| Show tweets you saved before (beta) | Off | Marks tweets you already saved in yellow when you see them again |
+
+**About "Show tweets you saved before":** this is a beta feature with a deliberate limit. It only knows about tweets you saved **with this script, in this browser, on this computer**. Nothing is synced with Readwise or your other devices, so tweets you saved from the Reader app, another browser or another computer are not marked. The list of saved tweet IDs stays in Tampermonkey's storage in your browser, and **Forget remembered tweets** in the settings clears it.
+
 ## How it works, and what it can access
 
 The whole script is a single file with no build step and no dependencies, so what you install is exactly [`SaveToReadwiseReaderFromTwitter.user.js`](SaveToReadwiseReaderFromTwitter.user.js) in this repository.
 
 - **Where it runs:** only on `twitter.com`, `mobile.twitter.com`, `tweetdeck.twitter.com` and `x.com` pages.
 - **What it reads:** only the link of the tweet whose button you click. It doesn't read your timeline, messages or account.
-- **What it sends, and when:** nothing until you click. Then it makes one request to Readwise's [Reader API](https://readwise.io/reader_api) with the tweet's link: `POST https://readwise.io/api/v3/save/`. When you enter a token, it checks it once with `GET https://readwise.io/api/v2/auth/`.
+- **What it sends, and when:** nothing until you click. Then it makes one request to Readwise's [Reader API](https://readwise.io/reader_api) with the tweet's link, plus your tags, note and Reader location if you set them: `POST https://readwise.io/api/v3/save/`. When you enter a token, it checks it once with `GET https://readwise.io/api/v2/auth/`.
 - **Who it talks to:** only `readwise.io`. Tampermonkey enforces this through the script's `@connect readwise.io` line.
 - **Where your token is stored:** in Tampermonkey's storage for this script, in your browser. It is only ever sent to Readwise, to authorize your saves. You can remove it from the setup dialog at any time.
+- **What else it stores:** your settings and, only if you turn on the beta feature, the IDs of tweets you saved. Both stay in Tampermonkey's storage in your browser and are never sent anywhere.
 - **No tracking:** no analytics, no third-party code, no data collection.
 
 The Tampermonkey permissions it asks for, and why:
 
 | Permission | Used for |
 |---|---|
-| `GM_getValue`, `GM_setValue` | Remembering your Readwise token |
+| `GM_getValue`, `GM_setValue` | Remembering your Readwise token, your settings and, if you turn it on, the tweets you saved |
 | `GM_xmlhttpRequest` | Talking to the Readwise API. Regular page scripts on x.com can't contact other domains |
-| `GM_registerMenuCommand` | The **Set Readwise API key…** entry in the Tampermonkey menu |
+| `GM_registerMenuCommand` | The **Settings…** and **Set Readwise API key…** entries in the Tampermonkey menu |
 
 ## Troubleshooting
 
