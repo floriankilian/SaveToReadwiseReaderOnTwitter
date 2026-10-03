@@ -1,0 +1,14 @@
+{
+  "name": "save-to-readwise-reader-on-twitter",
+  "private": true,
+  "description": "Tampermonkey userscript that saves tweets to Readwise Reader",
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^17.13.0"
+  }
+}
