@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Save Tweets to Readwise Reader
 // @namespace    https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter
-// @version      1.0.0
+// @version      1.1.0
 // @description  Adds a one-click button to every tweet on Twitter/X that copies the tweet link and saves the tweet to Readwise Reader.
 // @author       sirfloriank
 // @match        https://twitter.com/*
