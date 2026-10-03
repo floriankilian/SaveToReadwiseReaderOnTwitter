@@ -17,6 +17,24 @@ A userscript that adds a save button to every tweet on Twitter/X. One click save
 - **See what you saved (beta):** optionally mark tweets you already saved with this browser in yellow.
 - **Fits into X:** follows X's light, dim and dark themes, and works with both X's current and its newer layout.
 
+## How it differs from Readwise's built-in X import
+
+Readwise has its own [X/Twitter integration](https://docs.readwise.io/readwise/docs/importing-highlights/twitter). Once you connect your X account, it imports **all your bookmarks** once a day, and you can save tweets by replying **@readwise save** (or **@readwise save thread**) or by sending them to @readwise in a DM.
+
+This script is for when you want to **pick which tweets go to Reader**, without mixing that up with your bookmarks:
+
+| | This script | Readwise's X integration |
+|---|---|---|
+| **What gets saved** | Only the tweets whose button you click | Every bookmark, plus tweets you send to @readwise |
+| **Your X bookmarks** | Stay separate. Bookmark freely without filling your Reader library | Imported automatically (on by default) |
+| **When it arrives** | Right away | Bookmarks: once a day |
+| **Visible to others** | No, nothing is posted on X | An **@readwise save** reply is a public tweet |
+| **Connecting your X account** | Not needed; only a Readwise access token | Required |
+| **Per-save options** | Note, tags, and Inbox, Later or Archive | A note via the DM text |
+| **Where it works** | Desktop browser with Tampermonkey | Anywhere you use X, including the mobile app |
+
+You can use both: for example, turn off the bookmark import in Readwise (Dashboard → Import → Twitter) and use this button for the tweets you actually want to read later.
+
 ## Install
 
 Install the [Tampermonkey](https://www.tampermonkey.net/) browser extension first, then pick one option:
