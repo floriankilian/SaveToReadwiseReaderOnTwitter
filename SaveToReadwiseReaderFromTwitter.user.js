@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Save Tweets to Readwise Reader
 // @namespace    https://github.com/floriankilian/SaveToReadwiseReaderOnTwitter
-// @version      1.2.1
+// @version      1.3.0
 // @description  Adds a one-click button to every tweet on Twitter/X that copies the tweet link and saves the tweet to Readwise Reader.
 // @author       sirfloriank
 // @match        https://twitter.com/*
@@ -32,7 +32,12 @@
     const REQUEST_TIMEOUT = 15000;
     const SAVED_TWEETS_KEY = 'savedTweets';
     const MAX_REMEMBERED_TWEETS = 5000;
-    const SHORTCUTS_HINT = 'Click: save · Shift+Click: save with a note · Alt+Click: settings';
+    // Mac keyboards label the keys differently: Option instead of Alt, Cmd instead of Ctrl
+    const IS_MAC = /mac|iphone|ipad/i.test(navigator.userAgentData?.platform || navigator.platform || '');
+    const KEYS = IS_MAC
+        ? { alt: '⌥ Option', shift: '⇧ Shift', mod: '⌘ Cmd' }
+        : { alt: 'Alt', shift: 'Shift', mod: 'Ctrl' };
+    const SHORTCUTS_HINT = `Click: save · ${KEYS.shift}+Click: save with a note · ${KEYS.alt}+Click: settings`;
 
     // Options are opt-in: by default a click only saves the tweet
     const DEFAULT_SETTINGS = {
@@ -209,7 +214,6 @@
     function registerMenuCommands() {
         if (typeof GM_registerMenuCommand === 'function') {
             GM_registerMenuCommand('Settings…', () => openSettingsDialog());
-            GM_registerMenuCommand('Set Readwise API key…', () => openApiKeyDialog());
         }
     }
 
@@ -538,103 +542,97 @@
 
     // --- API key dialog ---
 
-    function openApiKeyDialog({ reason = '', onSaved = null } = {}) {
-        const { dialog, close } = openDialog('Connect Readwise Reader');
-        if (reason) dialog.appendChild(createElement('p', 'rw-reason', reason));
-        dialog.appendChild(createElement('p', 'rw-text', 'Paste your Readwise access token to save tweets with one click. You only need to do this once.'));
-
+    // Access token input with a Show button, a link to get a token and a status line.
+    // verify(key) checks the key with Readwise and reports problems in the status line.
+    function createTokenField() {
         const link = createElement('a', 'rw-link', 'Get your access token ↗');
         link.href = API_KEY_URL;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
-        dialog.appendChild(link);
 
         const field = createElement('div', 'rw-field');
         const input = createElement('input', 'rw-input');
         Object.assign(input, { type: 'password', value: apiKey || '', placeholder: 'Access token', autocomplete: 'off', spellcheck: false });
         input.setAttribute('aria-label', 'Readwise access token');
-        const reveal = createElement('button', 'rw-reveal', 'Show');
-        reveal.type = 'button';
-        reveal.addEventListener('click', () => {
+        const reveal = createButton('Show', 'rw-reveal', () => {
             const hidden = input.type === 'password';
             input.type = hidden ? 'text' : 'password';
             reveal.textContent = hidden ? 'Hide' : 'Show';
             input.focus();
         });
         field.append(input, reveal);
-        dialog.appendChild(field);
 
         const status = createElement('p', 'rw-status');
         status.setAttribute('aria-live', 'polite');
-        dialog.appendChild(status);
-
-        const actions = createElement('div', 'rw-actions');
-        if (apiKey) {
-            const remove = createElement('button', 'rw-button-remove', 'Remove saved key');
-            remove.type = 'button';
-            remove.addEventListener('click', () => {
-                apiKey = null;
-                GM_setValue('apiKey', '');
-                close();
-                showToast('Readwise API key removed');
-            });
-            actions.appendChild(remove);
-        }
-        actions.appendChild(createElement('div', 'rw-spacer'));
-        const cancel = createElement('button', 'rw-button rw-button-secondary', 'Cancel');
-        cancel.type = 'button';
-        cancel.addEventListener('click', () => close());
-        const save = createElement('button', 'rw-button rw-button-primary', 'Save');
-        save.type = 'button';
-        save.addEventListener('click', () => submit());
-        actions.append(cancel, save);
-        dialog.appendChild(actions);
-
         const setStatus = (message, type = 'info') => {
             status.textContent = message;
             status.dataset.type = type;
         };
-        const updateSaveButton = () => {
-            save.disabled = !input.value.trim();
-        };
+        input.addEventListener('input', () => setStatus(''));
 
-        async function submit() {
-            const key = input.value.trim();
-            if (!key || save.disabled) return;
-
-            save.disabled = true;
+        async function verify(key) {
             setStatus('Checking your token with Readwise…');
             const result = await validateApiKey(key);
             if (result === 'invalid') {
                 setStatus('Readwise does not recognize this token. Copy it again from the link above.', 'error');
-                updateSaveButton();
                 input.focus();
-                return;
+                return false;
             }
             if (result === 'unreachable') {
                 setStatus('Could not reach Readwise to check the token. Try again.', 'error');
-                updateSaveButton();
-                return;
+                return false;
             }
+            setStatus('');
+            return true;
+        }
 
-            apiKey = key;
-            GM_setValue('apiKey', key);
+        return { elements: [link, field, status], input, setStatus, verify };
+    }
+
+    function storeApiKey(key) {
+        apiKey = key || null;
+        GM_setValue('apiKey', key || '');
+    }
+
+    // Shown when a save needs a token first, or Readwise rejected the stored one
+    function openApiKeyDialog({ reason = '', onSaved = null } = {}) {
+        const { dialog, close } = openDialog('Connect Readwise Reader');
+        if (reason) dialog.appendChild(createElement('p', 'rw-reason', reason));
+        dialog.appendChild(createElement('p', 'rw-text', 'Paste your Readwise access token to save tweets with one click. You only need to do this once.'));
+
+        const token = createTokenField();
+        dialog.append(...token.elements);
+        dialog.appendChild(createElement('p', 'rw-hint', `You can change it later in the settings: ${KEYS.alt}+Click any save button.`));
+
+        const { actions, primary: save } = createDialogActions('Save', () => submit(), () => close());
+        dialog.appendChild(actions);
+        const updateSaveButton = () => {
+            save.disabled = !token.input.value.trim();
+        };
+
+        async function submit() {
+            const key = token.input.value.trim();
+            if (!key || save.disabled) return;
+
+            save.disabled = true;
+            const valid = await token.verify(key);
+            updateSaveButton();
+            if (!valid) return;
+
+            storeApiKey(key);
             close();
             if (onSaved) onSaved();
             else showToast('Readwise is connected');
         }
 
-        input.addEventListener('input', () => {
-            setStatus('');
-            updateSaveButton();
-        });
-        input.addEventListener('keydown', event => {
+        token.input.addEventListener('input', updateSaveButton);
+        token.input.addEventListener('keydown', event => {
             if (event.key === 'Enter') submit();
         });
 
         updateSaveButton();
-        input.focus();
-        input.select();
+        token.input.focus();
+        token.input.select();
     }
 
     // --- Settings dialog ---
@@ -644,15 +642,20 @@
 
         // Readwise connection
         const connection = createElement('section', 'rw-section');
-        connection.appendChild(createElement('h3', '', 'Readwise'));
-        const connectionRow = createElement('div', 'rw-row');
-        connectionRow.append(
-            createElement('p', 'rw-text', apiKey ? 'Connected with your access token.' : 'Not connected yet.'),
-            createButton(apiKey ? 'Change token' : 'Connect', 'rw-button rw-button-secondary', () => {
-                openApiKeyDialog({ onSaved: () => openSettingsDialog() });
-            })
-        );
-        connection.appendChild(connectionRow);
+        connection.appendChild(createElement('h3', '', 'Readwise access token'));
+        connection.appendChild(createElement('p', 'rw-text', apiKey
+            ? 'Connected. Paste a new token to replace it.'
+            : 'Not connected yet. Paste your token to start saving.'));
+        const token = createTokenField();
+        connection.append(...token.elements);
+        if (apiKey) {
+            const remove = createButton('Remove saved token', 'rw-button-remove', () => {
+                token.input.value = '';
+                token.setStatus('The token is removed when you click Save.');
+                token.input.focus();
+            });
+            connection.appendChild(remove);
+        }
 
         // What a click does
         const saving = createElement('section', 'rw-section');
@@ -701,7 +704,17 @@
 
         dialog.append(connection, saving, beta, createElement('p', 'rw-shortcuts', SHORTCUTS_HINT));
 
-        const { actions } = createDialogActions('Save', () => {
+        const { actions, primary: save } = createDialogActions('Save', async () => {
+            const key = token.input.value.trim();
+            if (key !== (apiKey || '')) {
+                if (key) {
+                    save.disabled = true;
+                    const valid = await token.verify(key);
+                    save.disabled = false;
+                    if (!valid) return;
+                }
+                storeApiKey(key);
+            }
             saveSettings({
                 copyLink: copyLink.input.checked,
                 location: location.value,
@@ -713,7 +726,7 @@
             showToast('Settings saved');
         }, () => close());
         dialog.appendChild(actions);
-        location.focus();
+        (apiKey ? location : token.input).focus();
     }
 
     // --- Note dialog (Shift+Click) ---
@@ -730,7 +743,7 @@
         const tags = createElement('input', 'rw-input rw-input-text');
         Object.assign(tags, { type: 'text', value: settings.tags, placeholder: 'e.g. twitter, to-read', autocomplete: 'off' });
         dialog.append(...createLabelledField('Tags', tags));
-        dialog.appendChild(createElement('p', 'rw-hint', 'Separate tags with commas. Ctrl+Enter (⌘+Enter on Mac) saves.'));
+        dialog.appendChild(createElement('p', 'rw-hint', `Separate tags with commas. ${KEYS.mod}+Enter saves.`));
 
         const submit = () => {
             close();
